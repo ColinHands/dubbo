@@ -446,7 +446,7 @@ public class ApplicationConfig extends AbstractConfig {
     @Override
     public void refresh() {
         super.refresh();
-        appendEnvironmentProperties();
+        appendEnvironmentProperties();// 把与本地相关拓展的配置加入到parameters里 实现类EnvironmentAdapter
     }
 
     private void appendEnvironmentProperties() {

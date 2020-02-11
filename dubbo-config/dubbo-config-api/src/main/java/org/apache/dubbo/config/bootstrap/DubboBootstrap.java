@@ -500,7 +500,7 @@ public class DubboBootstrap extends GenericEventListener {
         if (!initialized.compareAndSet(false, true)) {
             return;
         }
-
+        // 循环FrameworkExt的子类执行initialize()方法
         ApplicationModel.initFrameworkExts();
 
         startConfigCenter();
@@ -508,9 +508,9 @@ public class DubboBootstrap extends GenericEventListener {
         useRegistryAsConfigCenterIfNecessary();
 
         startMetadataReport();
-
+        // Environment 的externalConfigurationMap appExternalConfigurationMap中分别拿到注册配置和协议配置 解析并放如configManager中
         loadRemoteConfigs();
-
+        // 校验所有的配置
         checkGlobalConfigs();
 
         initMetadataService();

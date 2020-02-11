@@ -80,43 +80,51 @@ public abstract class AbstractInterfaceConfig extends AbstractMethodConfig {
     /**
      * The {@code Filter} when the provider side exposed a service or the customer side references a remote service used,
      * if there are more than one, you can use commas to separate them
+     * 当提供者端公开服务或客户端引用使用的远程服务时，如果有多个服务，可以使用逗号分隔它们
      */
     protected String filter;
 
     /**
      * The Listener when the provider side exposes a service or the customer side references a remote service used
      * if there are more than one, you can use commas to separate them
+     * 当提供者端公开服务或客户端引用使用的远程服务时，侦听器
      */
     protected String listener;
 
     /**
      * The owner of the service providers
+     * 服务提供者的所有者
      */
     protected String owner;
 
     /**
      * Connection limits, 0 means shared connection, otherwise it defines the connections delegated to the current service
+     * 连接限制，0表示共享连接，否则它定义委托给当前服务的连接
      */
     protected Integer connections;
 
     /**
      * The layer of service providers
+     * 服务提供者层
      */
     protected String layer;
 
     /**
      * The application info
+     * 应用程序信息
      */
     protected ApplicationConfig application;
 
     /**
      * The module info
+     * 模块信息
      */
     protected ModuleConfig module;
 
     /**
      * The registry list the service will register to
      * Also see {@link #registryIds}, only one of them will work.
+     * 注册表列表服务将注册也看到{@link #registryIds}，其中只有一个将工作。
      */
     protected List<RegistryConfig> registries;
 
@@ -128,6 +136,7 @@ public abstract class AbstractInterfaceConfig extends AbstractMethodConfig {
     /**
      * The id list of registries the service will register to
      * Also see {@link #registries}, only one of them will work.
+     * 服务将注册到的注册中心的id列表
      */
     protected String registryIds;
 
@@ -141,6 +150,7 @@ public abstract class AbstractInterfaceConfig extends AbstractMethodConfig {
 
     /**
      * The metrics configuration
+     * 标准配置
      */
     protected MetricsConfig metrics;
     protected MetadataReportConfig metadataReportConfig;
@@ -150,6 +160,7 @@ public abstract class AbstractInterfaceConfig extends AbstractMethodConfig {
     // callback limits
     private Integer callbacks;
     // the scope for referring/exporting a service, if it's local, it means searching in current JVM only.
+    // 引用/导出服务的范围(如果是本地的)意味着只在当前JVM中搜索。
     private String scope;
 
     protected String tag;
@@ -159,6 +170,7 @@ public abstract class AbstractInterfaceConfig extends AbstractMethodConfig {
 
     /**
      * The url of the reference service
+     * 引用服务的url
      */
     protected final List<URL> urls = new ArrayList<URL>();
 
@@ -200,7 +212,7 @@ public abstract class AbstractInterfaceConfig extends AbstractMethodConfig {
     /**
      * Check whether the remote service interface and the methods meet with Dubbo's requirements.it mainly check, if the
      * methods configured in the configuration file are included in the interface of remote service
-     *
+     * 检查远程服务接口和方法是否符合Dubbo的要求。主要检查配置文件中配置的方法是否包含在远程服务接口中
      * @param interfaceClass the interface of remote service
      * @param methods        the methods configured
      */
@@ -271,6 +283,7 @@ public abstract class AbstractInterfaceConfig extends AbstractMethodConfig {
     }
 
     private void convertRegistryIdsToRegistries() {
+        // 验证registryIds是否为空，如果为空则获取ApplicationConfig的registryIds 并设置之
         computeValidRegistryIds();
         if (StringUtils.isEmpty(registryIds)) {
             if (CollectionUtils.isEmpty(registries)) {

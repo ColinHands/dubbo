@@ -28,6 +28,7 @@ import org.apache.dubbo.registry.Registry;
 import org.apache.dubbo.rpc.Exporter;
 import org.apache.dubbo.rpc.Invoker;
 import org.apache.dubbo.rpc.Protocol;
+import org.apache.dubbo.rpc.model.ApplicationModel;
 import org.apache.dubbo.rpc.service.GenericService;
 
 import org.junit.jupiter.api.AfterEach;
@@ -129,7 +130,7 @@ public class ServiceConfigTest {
 
     @AfterEach
     public void tearDown() {
-//        ApplicationModel.getConfigManager().clear();
+        ApplicationModel.getConfigManager().clear();
     }
 
     @Test

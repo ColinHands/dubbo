@@ -291,6 +291,7 @@ public class ServiceConfig<T> extends ServiceConfigBase<T> {
     }
 
     @SuppressWarnings({"unchecked", "rawtypes"})
+    // 这里是不是每一个service一个实例？
     private void doExportUrls() {
         ServiceRepository repository = ApplicationModel.getServiceRepository();
         ServiceDescriptor serviceDescriptor = repository.registerService(getInterfaceClass());
@@ -316,6 +317,7 @@ public class ServiceConfig<T> extends ServiceConfigBase<T> {
         }
     }
 
+    // 如果一个服务设置要以好几种协议导出？
     private void doExportUrlsFor1Protocol(ProtocolConfig protocolConfig, List<URL> registryURLs) {
         String name = protocolConfig.getName();
         if (StringUtils.isEmpty(name)) {
@@ -415,11 +417,13 @@ public class ServiceConfig<T> extends ServiceConfigBase<T> {
             }
         }
         //init serviceMetadata attachments
+        // 把这个接口所有的信息放进serviceMetadata里
         serviceMetadata.getAttachments().putAll(map);
 
         // export service
         String host = findConfigedHosts(protocolConfig, registryURLs, map);
         Integer port = findConfigedPorts(protocolConfig, name, map);
+        // 这个url包含了这个接口所有的信息 map 所以这个url就是需要导出的服务
         URL url = new URL(name, host, port, getContextPath(protocolConfig).map(p -> p + "/" + path).orElse(path), map);
 
         // You can customize Configurator to append extra parameters
@@ -440,6 +444,7 @@ public class ServiceConfig<T> extends ServiceConfigBase<T> {
             // export to remote if the config is not local (export to local only when config is local)
             if (!SCOPE_LOCAL.equalsIgnoreCase(scope)) {
                 if (CollectionUtils.isNotEmpty(registryURLs)) {
+                    // 遍历注册中心地址 把服务注册到注册中心上
                     for (URL registryURL : registryURLs) {
                         //if protocol is only injvm ,not register
                         if (LOCAL_PROTOCOL.equalsIgnoreCase(url.getProtocol())) {
@@ -464,9 +469,11 @@ public class ServiceConfig<T> extends ServiceConfigBase<T> {
                             registryURL = registryURL.addParameter(PROXY_KEY, proxy);
                         }
 
+                        // 创建服务invoker 包含注册中心地址 与url 代理 这个生成的代码可以看奶奶的
                         Invoker<?> invoker = PROXY_FACTORY.getInvoker(ref, (Class) interfaceClass, registryURL.addParameterAndEncoded(EXPORT_KEY, url.toFullString()));
                         DelegateProviderMetaDataInvoker wrapperInvoker = new DelegateProviderMetaDataInvoker(invoker, this);
 
+                        // 在protocol里会根据url中的相应配置找到对应的protocol然后执行服务的导出操作
                         Exporter<?> exporter = protocol.export(wrapperInvoker);
                         exporters.add(exporter);
                     }

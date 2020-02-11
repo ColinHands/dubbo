@@ -22,6 +22,7 @@ import org.apache.dubbo.config.annotation.Reference;
 import org.apache.dubbo.config.api.DemoService;
 import org.apache.dubbo.config.provider.impl.DemoServiceImpl;
 
+import org.apache.dubbo.rpc.model.ApplicationModel;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -33,12 +34,12 @@ public class ReferenceConfigTest {
 
     @BeforeEach
     public void setUp() {
-//        ApplicationModel.getConfigManager().clear();
+        ApplicationModel.getConfigManager().clear();
     }
 
     @AfterEach
     public void tearDown() {
-//        ApplicationModel.getConfigManager().clear();
+        ApplicationModel.getConfigManager().clear();
     }
 
     @Test

@@ -45,6 +45,8 @@ public abstract class AbstractLoadBalance implements LoadBalance {
      * @param weight the weight of an invoker
      * @return weight which takes warmup into account
      */
+    // 计算权重，下面代码逻辑上形似于 (uptime / warmup) * weight。
+    // 随着服务运行时间 uptime 增大，权重计算值 ww 会慢慢接近配置值 weight
     static int calculateWarmupWeight(int uptime, int warmup, int weight) {
         int ww = (int) ( uptime / ((float) warmup / weight));
         return ww < 1 ? 1 : (Math.min(ww, weight));

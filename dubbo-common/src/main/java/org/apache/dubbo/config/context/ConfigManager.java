@@ -482,6 +482,8 @@ public class ConfigManager extends LifecycleAdapter implements FrameworkExt {
             });
         }
 
+        // 获取配置对象的ID 如果id为空则遍历实例的Field方法找到等于default的字段
+        // 如果此字段有 或者为true 那么id就是实例的名称+#+default
         String key = getId(config);
 
         C existedConfig = configsMap.get(key);

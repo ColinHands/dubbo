@@ -50,7 +50,7 @@ import static org.apache.dubbo.common.utils.ReflectUtils.findMethodByMethodSigna
 
 /**
  * Utility methods and public methods for parsing configuration
- *
+ * 解析配置的实用程序方法和公共方法
  * @export
  */
 public abstract class AbstractConfig implements Serializable {
@@ -60,6 +60,7 @@ public abstract class AbstractConfig implements Serializable {
 
     /**
      * The legacy properties container
+     * 遗留属性容器
      */
     private static final Map<String, String> LEGACY_PROPERTIES = new HashMap<String, String>();
 
@@ -113,6 +114,13 @@ public abstract class AbstractConfig implements Serializable {
         appendParameters(parameters, config, null);
     }
 
+    /**
+     * 把config对象的字段内容加入到parameters里 Parameter注解的excluded为true的排除
+     * Parameter注解中的内容这里都用到了
+     * @param parameters
+     * @param config
+     * @param prefix
+     */
     @SuppressWarnings("unchecked")
     public static void appendParameters(Map<String, String> parameters, Object config, String prefix) {
         if (config == null) {
@@ -201,6 +209,11 @@ public abstract class AbstractConfig implements Serializable {
         }
     }
 
+    /**
+     * 把methodConfig转换成AsyncMethodInfo 异步方法对象
+     * @param methodConfig
+     * @return
+     */
     protected static AsyncMethodInfo convertMethodConfig2AsyncInfo(MethodConfig methodConfig) {
         if (methodConfig == null || (methodConfig.getOninvoke() == null && methodConfig.getOnreturn() == null && methodConfig.getOnthrow() == null)) {
             return null;
@@ -220,6 +233,7 @@ public abstract class AbstractConfig implements Serializable {
         try {
             String oninvokeMethod = methodConfig.getOninvokeMethod();
             if (StringUtils.isNotEmpty(oninvokeMethod)) {
+                // 验证oninvoke实例类里有没有oninvokeMethod方法 并返回Method对象
                 asyncMethodInfo.setOninvokeMethod(getMethodByName(methodConfig.getOninvoke().getClass(), oninvokeMethod));
             }
 
@@ -239,6 +253,12 @@ public abstract class AbstractConfig implements Serializable {
         return asyncMethodInfo;
     }
 
+    /**
+     * 在clazz里查找是否有methodName的方法 如果有则返回methodName对象的Method对象 没有则抛异常
+     * @param clazz
+     * @param methodName
+     * @return
+     */
     private static Method getMethodByName(Class<?> clazz, String methodName) {
         try {
             return ReflectUtils.findMethodByMethodName(clazz, methodName);
@@ -247,6 +267,12 @@ public abstract class AbstractConfig implements Serializable {
         }
     }
 
+    /**
+     * 遍历properties Map对象的Key值 并且去掉key的prefix前缀
+     * @param properties
+     * @param prefix
+     * @return
+     */
     protected static Set<String> getSubProperties(Map<String, String> properties, String prefix) {
         return properties.keySet().stream().filter(k -> k.contains(prefix)).map(k -> {
             k = k.substring(prefix.length());
@@ -254,6 +280,13 @@ public abstract class AbstractConfig implements Serializable {
         }).collect(Collectors.toSet());
     }
 
+    /**
+     * 获取属性名称 因为考虑Getter方法上有Parameter注解会指定对象的属性名 所有获取时比较麻烦
+     * @param clazz
+     * @param setter
+     * @return
+     * @throws Exception
+     */
     private static String extractPropertyName(Class<?> clazz, Method setter) throws Exception {
         String propertyName = setter.getName().substring("set".length());
         Method getter = null;
@@ -271,16 +304,19 @@ public abstract class AbstractConfig implements Serializable {
         return propertyName;
     }
 
+    // 返回驼峰转.
     private static String calculatePropertyFromGetter(String name) {
         int i = name.startsWith("get") ? 3 : 2;
         return StringUtils.camelToSplitName(name.substring(i, i + 1).toLowerCase() + name.substring(i + 1), ".");
     }
 
+    // 返回驼峰
     private static String calculateAttributeFromGetter(String getter) {
         int i = getter.startsWith("get") ? 3 : 2;
         return getter.substring(i, i + 1).toLowerCase() + getter.substring(i + 1);
     }
 
+    // 设置Parameters属性字段
     private static void invokeSetParameters(Class c, Object o, Map map) {
         try {
             Method method = findMethodByMethodSignature(c, "setParameters", new String[]{Map.class.getName()});
@@ -292,6 +328,7 @@ public abstract class AbstractConfig implements Serializable {
         }
     }
 
+    // 获取Parameters属性字段
     private static Map<String, String> invokeGetParameters(Class c, Object o) {
         try {
             Method method = findMethodByMethodSignature(c, "getParameters", null);
@@ -304,6 +341,7 @@ public abstract class AbstractConfig implements Serializable {
         return null;
     }
 
+    // 是否是Parameters属性字段的Getter方法
     private static boolean isParametersGetter(Method method) {
         String name = method.getName();
         return ("getParameters".equals(name)
@@ -312,6 +350,7 @@ public abstract class AbstractConfig implements Serializable {
                 && method.getReturnType() == Map.class);
     }
 
+    // 是否是Parameters属性字段的Setter方法
     private static boolean isParametersSetter(Method method) {
         return ("setParameters".equals(method.getName())
                 && Modifier.isPublic(method.getModifiers())
@@ -320,6 +359,12 @@ public abstract class AbstractConfig implements Serializable {
                 && method.getReturnType() == void.class);
     }
 
+    /**
+     * 遍历parameters 把Key值拼接上prefix前缀，并且如果有-则转换成.
+     * @param parameters
+     * @param prefix
+     * @return
+     */
     private static Map<String, String> convert(Map<String, String> parameters, String prefix) {
         if (parameters == null || parameters.isEmpty()) {
             return Collections.emptyMap();
@@ -354,6 +399,12 @@ public abstract class AbstractConfig implements Serializable {
         }
     }
 
+    /**
+     * 把方法上的注解里的信息设置到 对应的字段里
+     *
+     * @param annotationClass 为注解Class
+     * @param annotation 为annotationClass的一个实例
+     */
     protected void appendAnnotation(Class<?> annotationClass, Object annotation) {
         Method[] methods = annotationClass.getMethods();
         for (Method method : methods) {
@@ -379,6 +430,7 @@ public abstract class AbstractConfig implements Serializable {
                             value = CollectionUtils.toStringMap((String[]) value);
                         }
                         try {
+                            // 在当前class实例里找到对应的Setter方法从而设置字段到当前class实例里
                             Method setterMethod = getClass().getMethod(setter, parameterType);
                             setterMethod.invoke(this, value);
                         } catch (NoSuchMethodException e) {
@@ -395,7 +447,7 @@ public abstract class AbstractConfig implements Serializable {
     /**
      * Should be called after Config was fully initialized.
      * // FIXME: this method should be completely replaced by appendParameters
-     *
+     * 获取配置对象的元信息
      * @return
      * @see AbstractConfig#appendParameters(Map, Object, String)
      * <p>
@@ -404,11 +456,14 @@ public abstract class AbstractConfig implements Serializable {
     public Map<String, String> getMetaData() {
         Map<String, String> metaData = new HashMap<>();
         Method[] methods = this.getClass().getMethods();
+        // 遍历实例的所哟方法
         for (Method method : methods) {
             try {
                 String name = method.getName();
+                // 判断是否是Getter方法 排除Object相关的Getter方法
                 if (MethodUtils.isMetaMethod(method)) {
                     String key;
+                    // 获取key值
                     Parameter parameter = method.getAnnotation(Parameter.class);
                     if (parameter != null && parameter.key().length() > 0 && parameter.useKeyAsProperty()) {
                         key = parameter.key();
@@ -424,6 +479,7 @@ public abstract class AbstractConfig implements Serializable {
 
                     /**
                      * Attributes annotated as deprecated should not override newly added replacement.
+                     * 排除已经无效过期的方法
                      */
                     if (MethodUtils.isDeprecated(method) && metaData.get(key) != null) {
                         continue;
@@ -456,10 +512,16 @@ public abstract class AbstractConfig implements Serializable {
         this.prefix = prefix;
     }
 
+    /**
+     * 配置对象刷新方法
+     * 这个方法很重要 基本每一次export服务都会用到
+     */
     public void refresh() {
         Environment env = ApplicationModel.getEnvironment();
         try {
+            // 获取compositeConfiguration 这个对象里有系统配置对象集合
             CompositeConfiguration compositeConfiguration = env.getConfiguration(getPrefix(), getId());
+            // 把当前配置对象转为ConfigConfigurationAdapter 其实是把对象的属性转换成Map元信息对象
             Configuration config = new ConfigConfigurationAdapter(this);
             if (env.isConfigCenterFirst()) {
                 // The sequence would be: SystemConfiguration -> AppExternalConfiguration -> ExternalConfiguration -> AbstractConfig -> PropertiesConfiguration
@@ -470,6 +532,7 @@ public abstract class AbstractConfig implements Serializable {
             }
 
             // loop methods, get override value and set the new value back to method
+            // 循环方法，获取覆盖值并将新值设置回方法
             Method[] methods = getClass().getMethods();
             for (Method method : methods) {
                 if (MethodUtils.isSetter(method)) {
@@ -548,7 +611,10 @@ public abstract class AbstractConfig implements Serializable {
         return true;
     }
 
-
+    /**
+     * 重写equals方法 如果两个对象的所有字段都相等则判断这两个对象相等
+     * 排斥有注解Parameter并且excluded为true的Getter方法
+     */
     @Override
     public boolean equals(Object obj) {
         if (obj == null || !(obj.getClass().getName().equals(this.getClass().getName()))) {
@@ -579,9 +645,10 @@ public abstract class AbstractConfig implements Serializable {
 
     /**
      * Add {@link AbstractConfig instance} into {@link ConfigManager}
+     *  把当前配置对象加入到ConfigManager 配置管理中心
      * <p>
      * Current method will invoked by Spring or Java EE container automatically, or should be triggered manually.
-     *
+     * 当前方法将由Spring或Java EE容器自动调用，或应手动触发。
      * @see ConfigManager#addConfig(AbstractConfig)
      * @since 2.7.5
      */
