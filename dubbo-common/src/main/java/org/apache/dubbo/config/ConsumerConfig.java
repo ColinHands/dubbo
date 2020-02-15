@@ -60,6 +60,8 @@ public class ConsumerConfig extends AbstractReferenceConfig {
     /**
      * By default, a TCP long-connection communication is shared between the consumer process and the provider process.
      * This property can be set to share multiple TCP long-connection communications. Note that only the dubbo protocol takes effect.
+     * 默认情况下，在使用者进程和提供者进程之间共享TCP长连接通信。
+     * 可以将此属性设置为共享多个TCP长连接通信。注意，只有dubbo协议生效。
      */
     private Integer shareconnections;
 

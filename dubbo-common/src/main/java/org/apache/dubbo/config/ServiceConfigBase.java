@@ -175,6 +175,7 @@ public abstract class ServiceConfigBase<T> extends AbstractServiceConfig {
 
     public void checkRef() {
         // reference should not be null, and is the implementation of the given interface
+        // 引用不应该为空，并且是给定接口的实现
         if (ref == null) {
             throw new IllegalStateException("ref not allow null!");
         }
@@ -205,6 +206,7 @@ public abstract class ServiceConfigBase<T> extends AbstractServiceConfig {
         if (provider != null) {
             return;
         }
+        // 在ConfigManager找出isDefault为true的ProviderConfig
         setProvider(
                 ApplicationModel.getConfigManager()
                         .getDefaultProvider()
@@ -224,7 +226,9 @@ public abstract class ServiceConfigBase<T> extends AbstractServiceConfig {
     }
 
     public void completeCompoundConfigs() {
+        // 主要设置注册中心配置（其他设置显示已废弃）1提供者、2模块、3应用
     	super.completeCompoundConfigs(provider);
+    	// 检测 protocols、registryIds、protocolIds是否为空 如果为空在设置provider的
     	if(provider != null) {
             if (protocols == null) {
                 setProtocols(provider.getProtocols());
@@ -242,6 +246,8 @@ public abstract class ServiceConfigBase<T> extends AbstractServiceConfig {
     }
     private void convertProtocolIdsToProtocols() {
         computeValidProtocolIds();
+        // 如果protocolIds和protocols都为空 则去配置管理中心ConfigManager去拿protocolConfigs
+        // 如果还是为空则新建一个ProtocolConfig并用系统配置刷新之
         if (StringUtils.isEmpty(protocolIds)) {
             if (CollectionUtils.isEmpty(protocols)) {
                 List<ProtocolConfig> protocolConfigs = ApplicationModel.getConfigManager().getDefaultProtocols();
@@ -254,6 +260,7 @@ public abstract class ServiceConfigBase<T> extends AbstractServiceConfig {
                 setProtocols(protocolConfigs);
             }
         } else {
+            // 如果 protocolIds 不为空则以逗号分割之，并遍历id创建出相应的ProtocolConfig
             String[] arr = COMMA_SPLIT_PATTERN.split(protocolIds);
             List<ProtocolConfig> tmpProtocols = new ArrayList<>();
             Arrays.stream(arr).forEach(id -> {
@@ -362,6 +369,7 @@ public abstract class ServiceConfigBase<T> extends AbstractServiceConfig {
         return generic;
     }
 
+    // 设置它的值 值的定义做了限制
     public void setGeneric(String generic) {
         if (StringUtils.isEmpty(generic)) {
             return;
@@ -414,6 +422,7 @@ public abstract class ServiceConfigBase<T> extends AbstractServiceConfig {
         return URL.buildKey(interfaceName, group, version);
     }
 
+    // 如果此实例的protocolIds为空则把getProvider的protocolIds设置之
     private void computeValidProtocolIds() {
         if (StringUtils.isEmpty(getProtocolIds())) {
             if (getProvider() != null && StringUtils.isNotEmpty(getProvider().getProtocolIds())) {
@@ -424,7 +433,10 @@ public abstract class ServiceConfigBase<T> extends AbstractServiceConfig {
 
     @Override
     protected void computeValidRegistryIds() {
+        // 设置此实例父类 AbstractInterfaceConfig 的 registryIds
+        // 如果为空则把 getApplication() 的registryIds设置之
         super.computeValidRegistryIds();
+        // 如果还是为空 则设置 getProvider() 的 registryIds
         if (StringUtils.isEmpty(getRegistryIds())) {
             if (getProvider() != null && StringUtils.isNotEmpty(getProvider().getRegistryIds())) {
                 setRegistryIds(getProvider().getRegistryIds());

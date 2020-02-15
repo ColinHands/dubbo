@@ -64,6 +64,7 @@ public class RegistryConfig extends AbstractConfig {
 
     /**
      * Network transmission type
+     * 网络传输类型
      */
     private String transporter;
 
@@ -74,11 +75,14 @@ public class RegistryConfig extends AbstractConfig {
     /**
      * Affects how traffic distributes among registries, useful when subscribing multiple registries, available options:
      * 1. zone-aware, a certain type of traffic always goes to one Registry according to where the traffic is originated.
+     * 影响流量在注册中心之间的分配方式，在订阅多个注册中心时非常有用。
+     * 1. 区域感知，特定类型的流量总是根据流量的来源流向一个注册中心。
      */
     private String cluster;
 
     /**
      * The region where the registry belongs, usually used to isolate traffics
+     * 注册中心所在的区域，通常用来隔离交通
      */
     private String zone;
 
@@ -101,6 +105,7 @@ public class RegistryConfig extends AbstractConfig {
 
     /**
      * File for saving register center dynamic list
+     * 文件保存注册中心动态列表
      */
     private String file;
 
@@ -111,11 +116,13 @@ public class RegistryConfig extends AbstractConfig {
 
     /**
      * Whether to check if register center is available when boot up
+     * 启动时是否检查注册中心是否可用
      */
     private Boolean check;
 
     /**
      * Whether to allow dynamic service to register on the register center
+     * 是否允许动态服务在注册中心注册
      */
     private Boolean dynamic;
 
@@ -141,12 +148,14 @@ public class RegistryConfig extends AbstractConfig {
 
     /**
      * Simple the registry. both useful for provider and consumer
+     * 简单的注册表。对提供者和使用者都有用
      *
      * @since 2.7.0
      */
     private Boolean simplified;
     /**
      * After simplify the registry, should add some parameter individually. just for provider.
+     * 简化注册表后，应单独添加一些参数。只是为了提供者。
      * <p>
      * such as: extra-keys = A,b,c,d
      *
@@ -156,27 +165,33 @@ public class RegistryConfig extends AbstractConfig {
 
     /**
      * the address work as config center or not
+     * 地址是否作为配置中心工作
      */
     private Boolean useAsConfigCenter;
 
     /**
      * the address work as remote metadata center or not
+     * 地址是否作为远程元数据中心工作
      */
     private Boolean useAsMetadataCenter;
 
     /**
      * list of rpc protocols accepted by this registry, for example, "dubbo,rest"
+     * 此注册中心接受的rpc协议列表，例如，“dubbo,rest”
      */
     private String accepts;
 
     /**
      * Always use this registry first if set to true, useful when subscribe to multiple registries
+     * 如果将此注册表设置为true，请始终首先使用此注册表，这在订阅多个注册表时非常有用
+     * 是否是首选
      */
     private Boolean preferred;
 
     /**
      * Affects traffic distribution among registries, useful when subscribe to multiple registries
      * Take effect only when no preferred registry is specified.
+     * 影响注册中心之间的流量分配，当订阅多个注册中心仅在未指定首选注册中心时才有效。
      */
     private Integer weight;
 

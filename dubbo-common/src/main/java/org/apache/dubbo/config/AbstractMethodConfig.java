@@ -41,6 +41,7 @@ public abstract class AbstractMethodConfig extends AbstractConfig {
 
     /**
      * max concurrent invocations
+     * 最大并发调用
      */
     protected Integer actives;
 
@@ -57,41 +58,48 @@ public abstract class AbstractMethodConfig extends AbstractConfig {
 
     /**
      * Whether to ack async-sent
+     * 是否ack异步发送
      */
     protected Boolean sent;
 
     /**
      * The name of mock class which gets called when a service fails to execute
-     *
+     * 在服务执行失败时调用的模拟类的名称
      * note that: the mock doesn't support on the provider side，and the mock is executed when a non-business exception
      * occurs after a remote service call
+     * 在提供程序端不支持模拟，并且在远程服务调用后发生非业务异常时执行模拟
      */
     protected String mock;
 
     /**
      * Merger
+     * 合并
      */
     protected String merger;
 
     /**
      * Cache the return result with the call parameter as key, the following options are available: lru, threadlocal,
      * jcache, etc.
+     * 以调用参数为键缓存返回结果，可以使用以下选项:lru、threadlocal、
      */
     protected String cache;
 
     /**
      * Whether JSR303 standard annotation validation is enabled or not, if enabled, annotations on method parameters will
      * be validated
+     * 无论是否启用JSR303标准注释验证，如果启用，将验证关于方法参数的注释
      */
     protected String validation;
 
     /**
      * The customized parameters
+     * 自定义参数
      */
     protected Map<String, String> parameters;
 
     /**
      * Forks for forking cluster
+     * 叉为分叉集群
      */
     protected Integer forks;
 

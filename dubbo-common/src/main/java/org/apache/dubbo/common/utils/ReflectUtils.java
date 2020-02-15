@@ -1229,6 +1229,7 @@ public final class ReflectUtils {
         return unmodifiableSet(hierarchicalTypes);
     }
 
+    // 遍历对象的属性 找出propertyName字段 得到propertyName设置的值
     public static <T> T getProperty(Object bean, String propertyName) {
         Class<?> beanClass = bean.getClass();
         BeanInfo beanInfo = null;

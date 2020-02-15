@@ -106,11 +106,13 @@ public class ServiceConfig<T> extends ServiceConfigBase<T> {
 
     /**
      * A random port cache, the different protocols who has no port specified have different random port
+     * 一个随机端口缓存，没有指定端口的不同协议有不同的随机端口
      */
     private static final Map<String, Integer> RANDOM_PORT_MAP = new HashMap<String, Integer>();
 
     /**
      * A delayed exposure service timer
+     * 延迟曝光服务计时器
      */
     private static final ScheduledExecutorService DELAY_EXPORT_EXECUTOR = Executors.newSingleThreadScheduledExecutor(new NamedThreadFactory("DubboServiceDelayExporter", true));
 
@@ -119,6 +121,7 @@ public class ServiceConfig<T> extends ServiceConfigBase<T> {
     /**
      * A {@link ProxyFactory} implementation that will generate a exported service proxy,the JavassistProxyFactory is its
      * default implementation
+     * 将生成导出服务代理的{@link ProxyFactory}实现，其默认实现是JavassistProxyFactory
      */
     private static final ProxyFactory PROXY_FACTORY = ExtensionLoader.getExtensionLoader(ProxyFactory.class).getAdaptiveExtension();
 
@@ -129,6 +132,7 @@ public class ServiceConfig<T> extends ServiceConfigBase<T> {
 
     /**
      * The flag whether a service has unexported ,if the method unexported is invoked, the value is true
+     * 标记服务是否未导出，如果调用了未导出的方法，则该值为true
      */
     private transient volatile boolean unexported;
 
@@ -208,11 +212,15 @@ public class ServiceConfig<T> extends ServiceConfigBase<T> {
 
     private void checkAndUpdateSubConfigs() {
         // Use default configs defined explicitly with global scope
+        // 使用默认配置显式定义的全局范围
         completeCompoundConfigs();
+        // 如果提供者为空 则在配置管理里查找或者创建之
         checkDefault();
+        // 查找或者创建ProtocolConfig集合并且把protocolIds转换成ProtocolConfig集合
         checkProtocol();
         // if protocol is not injvm checkRegistry
         if (!isOnlyInJvm()) {
+            // 查找或者创建RegistryConfig集合并且把registryIds转换成RegistryConfig集合
             checkRegistry();
         }
         this.refresh();
@@ -233,7 +241,9 @@ public class ServiceConfig<T> extends ServiceConfigBase<T> {
             } catch (ClassNotFoundException e) {
                 throw new IllegalStateException(e.getMessage(), e);
             }
+            // 检查远程服务接口和方法是否符合Dubbo的要求。主要检查配置文件中配置的方法是否包含在远程服务接口中
             checkInterfaceAndMethods(interfaceClass, getMethods());
+            // 引用不应该为空，并且是给定接口的实现
             checkRef();
             generic = Boolean.FALSE.toString();
         }
@@ -265,9 +275,12 @@ public class ServiceConfig<T> extends ServiceConfigBase<T> {
                 throw new IllegalStateException("The stub implementation class " + stubClass.getName() + " not implement interface " + interfaceName);
             }
         }
+        // 校验Stub、Local的类是否和interfaceClass有关联 并且是否有默认构造函数
         checkStubAndLocal(interfaceClass);
+        // 校验Mock的合法性
         ConfigValidationUtils.checkMock(interfaceClass, this);
         ConfigValidationUtils.validateServiceConfig(this);
+        // 动态添加一些参数/检查配置
         appendParameters();
     }
 
@@ -303,6 +316,7 @@ public class ServiceConfig<T> extends ServiceConfigBase<T> {
                 serviceMetadata
         );
 
+        // 获取注册中心地址
         List<URL> registryURLs = ConfigValidationUtils.loadRegistries(this, true);
 
         for (ProtocolConfig protocolConfig : protocols) {
@@ -310,6 +324,7 @@ public class ServiceConfig<T> extends ServiceConfigBase<T> {
                     .map(p -> p + "/" + path)
                     .orElse(path), group, version);
             // In case user specified path, register service one more time to map it to path.
+            // 如果用户指定了路径，则再次注册服务将其映射到路径。
             repository.registerService(pathKey, interfaceClass);
             // TODO, uncomment this line once service key is unified
             serviceMetadata.setServiceKey(pathKey);
@@ -350,9 +365,12 @@ public class ServiceConfig<T> extends ServiceConfigBase<T> {
                 if (CollectionUtils.isNotEmpty(arguments)) {
                     for (ArgumentConfig argument : arguments) {
                         // convert argument type
+                        // 转换参数类型
                         if (argument.getType() != null && argument.getType().length() > 0) {
                             Method[] methods = interfaceClass.getMethods();
                             // visit all methods
+                            // 遍历interfaceClass的所有方法 找到与当前methodConfig name相等的method
+                            // 然后遍历method的参数 找到对应ArgumentConfig集合某一项的实际类型
                             if (methods != null && methods.length > 0) {
                                 for (int i = 0; i < methods.length; i++) {
                                     String methodName = methods[i].getName();
@@ -427,6 +445,7 @@ public class ServiceConfig<T> extends ServiceConfigBase<T> {
         URL url = new URL(name, host, port, getContextPath(protocolConfig).map(p -> p + "/" + path).orElse(path), map);
 
         // You can customize Configurator to append extra parameters
+        // 您可以自定义配置器来附加额外的参数
         if (ExtensionLoader.getExtensionLoader(ConfiguratorFactory.class)
                 .hasExtension(url.getProtocol())) {
             url = ExtensionLoader.getExtensionLoader(ConfiguratorFactory.class)
@@ -451,6 +470,7 @@ public class ServiceConfig<T> extends ServiceConfigBase<T> {
                             continue;
                         }
                         url = url.addParameterIfAbsent(DYNAMIC_KEY, registryURL.getParameter(DYNAMIC_KEY));
+                        // 根据注册中心地址获取去监控中心Url 如果指定了监控中心address直接创建 否则就要去注册中心动态获取去
                         URL monitorUrl = ConfigValidationUtils.loadMonitor(this, registryURL);
                         if (monitorUrl != null) {
                             url = url.addParameterAndEncoded(MONITOR_KEY, monitorUrl.toFullString());
@@ -464,6 +484,7 @@ public class ServiceConfig<T> extends ServiceConfigBase<T> {
                         }
 
                         // For providers, this is used to enable custom proxy to generate invoker
+                        // 对于提供程序，这用于启用自定义代理来生成调用程序
                         String proxy = url.getParameter(PROXY_KEY);
                         if (StringUtils.isNotEmpty(proxy)) {
                             registryURL = registryURL.addParameter(PROXY_KEY, proxy);
@@ -532,6 +553,8 @@ public class ServiceConfig<T> extends ServiceConfigBase<T> {
      * Configuration priority: environment variables -> java system properties -> host property in config file ->
      * /etc/hosts -> default network address -> first available network address
      *
+     * 注册和绑定服务提供商的IP地址，可以单独配置。
+     * 配置优先级:环境变量-> java系统属性-配置文件中的>主机属性->/etc/hosts ->默认网络地址->第一个可用网络地址
      * @param protocolConfig
      * @param registryURLs
      * @param map

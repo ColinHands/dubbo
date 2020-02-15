@@ -38,16 +38,19 @@ public abstract class AbstractReferenceConfig extends AbstractInterfaceConfig {
 
     /**
      * Check if service provider exists, if not exists, it will be fast fail
+     * 检查服务提供者是否存在，如果不存在，则快速失败
      */
     protected Boolean check;
 
     /**
      * Whether to eagle-init
+     * 是否eagle-init 饥饿加载
      */
     protected Boolean init;
 
     /**
      * Whether to use generic interface
+     * 是否使用通用接口
      */
     protected String generic;
 
@@ -67,22 +70,26 @@ public abstract class AbstractReferenceConfig extends AbstractInterfaceConfig {
 
     /**
      * Whether to support event in stub.
+     * 是否在存根中支持事件。
      */
     //TODO solve merge problem
     protected Boolean stubevent;//= Constants.DEFAULT_STUB_EVENT;
 
     /**
      * The remote service version the customer side will reference
+     * 客户端将引用的远程服务版本
      */
     protected String version;
 
     /**
      * The remote service group the customer side will reference
+     * 客户端将引用的远程服务组
      */
     protected String group;
 
     /**
      * declares which app or service this interface belongs to
+     * 声明此接口属于哪个应用程序或服务
      */
     protected String providedBy;
 

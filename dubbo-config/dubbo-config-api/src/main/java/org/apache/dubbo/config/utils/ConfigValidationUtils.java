@@ -251,6 +251,7 @@ public class ConfigValidationUtils {
     /**
      * Legitimacy check and setup of local simulated operations. The operations can be a string with Simple operation or
      * a classname whose {@link Class} implements a particular function
+     * 合法性检查和本地模拟操作的设置。操作可以是一个具有简单操作的字符串，也可以是一个类名，它的{@link Class}实现了一个特定的函数
      *
      * @param interfaceClass for provider side, it is the {@link Class} of the service that will be exported; for consumer
      *                       side, it is the {@link Class} of the remote service interface that will be referenced
@@ -261,21 +262,27 @@ public class ConfigValidationUtils {
             return;
         }
 
+        // 标准化mock的值 最兼容操作
         String normalizedMock = MockInvoker.normalizeMock(mock);
         if (normalizedMock.startsWith(RETURN_PREFIX)) {
+            // 如果以return开头
             normalizedMock = normalizedMock.substring(RETURN_PREFIX.length()).trim();
             try {
                 //Check whether the mock value is legal, if it is illegal, throw exception
+                // 检查模拟值是否合法，如果不合法，则抛出异常
+                // 主要是根据设置的返回值格式化return的值
                 MockInvoker.parseMockValue(normalizedMock);
             } catch (Exception e) {
                 throw new IllegalStateException("Illegal mock return in <dubbo:service/reference ... " +
                         "mock=\"" + mock + "\" />");
             }
         } else if (normalizedMock.startsWith(THROW_PREFIX)) {
+            // 如果以throw开头
             normalizedMock = normalizedMock.substring(THROW_PREFIX.length()).trim();
             if (ConfigUtils.isNotEmpty(normalizedMock)) {
                 try {
                     //Check whether the mock value is legal
+                    // 主要是在THROWABLE_MAP异常Map里查找是否有对应的类 如果没有则去创建并加入到Map里
                     MockInvoker.getThrowable(normalizedMock);
                 } catch (Exception e) {
                     throw new IllegalStateException("Illegal mock throw in <dubbo:service/reference ... " +
@@ -284,6 +291,7 @@ public class ConfigValidationUtils {
             }
         } else {
             //Check whether the mock class is a implementation of the interfaceClass, and if it has a default constructor
+            // 检查模拟类是否为interfaceClass的实现，以及它是否具有默认构造函数
             MockInvoker.getMockObject(normalizedMock, interfaceClass);
         }
     }
@@ -311,6 +319,7 @@ public class ConfigValidationUtils {
         checkName(TOKEN_KEY, config.getToken());
         checkPathName(PATH_KEY, config.getPath());
 
+        // 校验是否有相应listener的SPI拓展
         checkMultiExtension(ExporterListener.class, "listener", config.getListener());
 
         validateAbstractInterfaceConfig(config);
@@ -336,6 +345,7 @@ public class ConfigValidationUtils {
     }
 
     public static void validateReferenceConfig(ReferenceConfig config) {
+        // 检查InvokerListener类型的拓展 有没有config.getListener()值的 listener只是为了让打印日志
         checkMultiExtension(InvokerListener.class, "listener", config.getListener());
         checkKey(VERSION_KEY, config.getVersion());
         checkKey(GROUP_KEY, config.getGroup());
@@ -511,6 +521,8 @@ public class ConfigValidationUtils {
     /**
      * Check whether there is a <code>Extension</code> who's name (property) is <code>value</code> (special treatment is
      * required)
+     *
+     * 检查是否有一个<code>Extension</code> who's name (property) is <code>value</code>(需要特殊处理)
      *
      * @param type     The Extension type
      * @param property The extension key

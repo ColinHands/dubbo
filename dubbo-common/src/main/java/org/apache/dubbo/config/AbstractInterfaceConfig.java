@@ -54,6 +54,7 @@ public abstract class AbstractInterfaceConfig extends AbstractMethodConfig {
 
     /**
      * Local impl class name for the service interface
+     * 服务接口的本地impl类名
      */
     protected String local;
 
@@ -250,6 +251,7 @@ public abstract class AbstractInterfaceConfig extends AbstractMethodConfig {
 
     /**
      * Legitimacy check of stub, note that: the local will deprecated, and replace with <code>stub</code>
+     * 合法性检查存根，注意:本地将弃用，并替换为<code>stub</code>
      *
      * @param interfaceClass for provider side, it is the {@link Class} of the service that will be exported; for consumer
      *                       side, it is the {@link Class} of the remote service interface

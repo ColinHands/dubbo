@@ -58,6 +58,7 @@ public class MethodConfig extends AbstractMethodConfig {
 
     /**
      * If it's reliable
+     * 是否是 可靠的
      */
     private Boolean reliable;
 
@@ -83,6 +84,7 @@ public class MethodConfig extends AbstractMethodConfig {
 
     /**
      * Callback instance when async-call is invoked
+     * 调用异步调用时的回调实例
      */
     private Object oninvoke;
 
@@ -118,6 +120,7 @@ public class MethodConfig extends AbstractMethodConfig {
 
     /**
      * These properties come from MethodConfig's parent Config module, they will neither be collected directly from xml or API nor be delivered to url
+     * 这些属性来自MethodConfig的父配置模块，它们既不会直接从xml或API收集，也不会传递到url
      */
     private String service;
     private String serviceId;

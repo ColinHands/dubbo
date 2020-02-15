@@ -30,6 +30,8 @@ import java.util.Set;
 /**
  * ServiceModel and ServiceMetadata are to some extend duplicated with each other.
  * We should merge them in the future.
+ * ServiceModel和ServiceMetadata在某种程度上是相互复制的。
+ * 我们应该在将来合并它们。
  */
 public class ServiceDescriptor {
     private final String serviceName;
@@ -78,7 +80,7 @@ public class ServiceDescriptor {
 
     /**
      * Does not use Optional as return type to avoid potential performance decrease.
-     *
+     * 不要使用可选的返回类型来避免潜在的性能下降。
      * @param methodName
      * @param params
      * @return

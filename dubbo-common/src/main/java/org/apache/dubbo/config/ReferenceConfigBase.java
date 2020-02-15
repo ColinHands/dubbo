@@ -44,6 +44,7 @@ public abstract class ReferenceConfigBase<T> extends AbstractReferenceConfig {
 
     /**
      * The interface name of the reference service
+     * 引用服务的接口名
      */
     protected String interfaceName;
 
@@ -59,6 +60,7 @@ public abstract class ReferenceConfigBase<T> extends AbstractReferenceConfig {
 
     /**
      * The url for peer-to-peer invocation
+     * 点对点调用的url
      */
     protected String url;
 
@@ -69,6 +71,7 @@ public abstract class ReferenceConfigBase<T> extends AbstractReferenceConfig {
 
     /**
      * Only the service provider of the specified protocol is invoked, and other protocols are ignored.
+     * 只调用指定协议的服务提供者，而忽略其他协议。
      */
     protected String protocol;
 
@@ -106,6 +109,8 @@ public abstract class ReferenceConfigBase<T> extends AbstractReferenceConfig {
         if (shouldInit == null) {
             // default is true, spring will still init lazily by setting init's default value to false,
             // the def default setting happens in {@link ReferenceBean#afterPropertiesSet}.
+            // 默认值为true, spring仍然会惰性地初始化init，方法是将init的默认值设置为false，
+            // def默认设置发生在{@link ReferenceBean#afterPropertiesSet}中。
             return true;
         }
         return shouldInit;

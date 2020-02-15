@@ -47,16 +47,19 @@ public abstract class AbstractServiceConfig extends AbstractInterfaceConfig {
 
     /**
      * whether the service is deprecated
+     * 服务是否被弃用
      */
     protected Boolean deprecated = false;
 
     /**
      * The time delay register service (milliseconds)
+     * 延时注册服务
      */
     protected Integer delay;
 
     /**
      * Whether to export the service
+     * 是否导出服务
      */
     protected Boolean export;
 
@@ -67,6 +70,7 @@ public abstract class AbstractServiceConfig extends AbstractInterfaceConfig {
 
     /**
      * Document center
+     * 文档中心
      */
     protected String document;
 
@@ -74,21 +78,25 @@ public abstract class AbstractServiceConfig extends AbstractInterfaceConfig {
      * Whether to register as a dynamic service or not on register center, the value is true, the status will be enabled
      * after the service registered,and it needs to be disabled manually; if you want to disable the service, you also need
      * manual processing
+     * 是否在注册中心注册为动态服务，值为true，服务注册后状态为启用状态，需要手动禁用;如果要禁用服务，还需要手动处理
      */
     protected Boolean dynamic = true;
 
     /**
      * Whether to use token
+     * 是否使用令牌
      */
     protected String token;
 
     /**
      * Whether to export access logs to logs
+     * 是否将访问日志导出到日志
      */
     protected String accesslog;
 
     /**
      * The protocol list the service will export with
+     * 服务将导出的协议列表
      * Also see {@link #protocolIds}, only one of them will work.
      */
     protected List<ProtocolConfig> protocols;
@@ -100,6 +108,7 @@ public abstract class AbstractServiceConfig extends AbstractInterfaceConfig {
     protected String protocolIds;
 
     // max allowed execute times
+    // 最大允许执行时间
     private Integer executes;
 
     /**
@@ -109,11 +118,13 @@ public abstract class AbstractServiceConfig extends AbstractInterfaceConfig {
 
     /**
      * Warm up period
+     * 热身阶段
      */
     private Integer warmup;
 
     /**
      * The serialization type
+     * 序列化类型
      */
     private String serialization;
 

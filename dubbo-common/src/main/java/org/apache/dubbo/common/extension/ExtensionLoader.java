@@ -189,7 +189,14 @@ public class ExtensionLoader<T> {
 
     /**
      * This is equivalent to {@code getActivateExtension(url, key, null)}
-     *
+     * 在加载SPI类时会把实现类上的Activate注解缓存起来 这里获取的时候
+     * 会先根据 url中的parameters 遍历parameters 看是否有key等于activateValue
+     * k v 是parameters的键值对 key keyValue是activateValue以：分割后的值
+     * if ((k.equals(key) || k.endsWith("." + key))
+     *  && ((keyValue != null && keyValue.equals(v)) || (keyValue == null && ConfigUtils.isNotEmpty(v))))
+     * 并且 activateGroup的一项等于传入的group
+     * activateGroup = ((Activate) activate).group();
+     * activateValue = ((Activate) activate).value();
      * @param url url
      * @param key url parameter key which used to get extension point names
      * @return extension list which are activated.

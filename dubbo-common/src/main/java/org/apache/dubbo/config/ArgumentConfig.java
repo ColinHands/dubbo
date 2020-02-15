@@ -32,6 +32,7 @@ public class ArgumentConfig implements Serializable {
 
     /**
      * The argument index: index -1 represents not set
+     * 参数index: index -1表示未设置
      */
     private Integer index = -1;
 

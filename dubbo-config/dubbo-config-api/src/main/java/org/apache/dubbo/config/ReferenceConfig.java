@@ -82,6 +82,7 @@ import static org.apache.dubbo.rpc.cluster.Constants.REFER_KEY;
 /**
  * Please avoid using this class for any new application,
  * use {@link ReferenceConfigBase} instead.
+ * 请避免将此类用于任何新应用程序，而是使用{@link ReferenceConfigBase}。
  */
 public class ReferenceConfig<T> extends ReferenceConfigBase<T> {
 
@@ -100,6 +101,10 @@ public class ReferenceConfig<T> extends ReferenceConfigBase<T> {
      * <p>
      * Actually，when the {@link ExtensionLoader} init the {@link Protocol} instants,it will automatically wraps two
      * layers, and eventually will get a <b>ProtocolFilterWrapper</b> or <b>ProtocolListenerWrapper</b>
+     *
+     * 具有自适应功能的{@link协议}实现，在不同的场景中会有所不同。
+     * 特定的{@link协议}实现由{@link URL}中的协议属性决定。
+     * 实际上，当{@link ExtensionLoader} init {@link Protocol} in时，它会自动封装两层，最终会得到一个<b>ProtocolFilterWrapper</b>或者<b>ProtocolListenerWrapper</b>
      */
     private static final Protocol REF_PROTOCOL = ExtensionLoader.getExtensionLoader(Protocol.class).getAdaptiveExtension();
 
@@ -191,6 +196,7 @@ public class ReferenceConfig<T> extends ReferenceConfigBase<T> {
 
         checkAndUpdateSubConfigs();
 
+        // 合法性检查存根
         checkStubAndLocal(interfaceClass);
         ConfigValidationUtils.checkMock(interfaceClass, this);
 
@@ -232,6 +238,7 @@ public class ReferenceConfig<T> extends ReferenceConfigBase<T> {
                         map.put(methodConfig.getName() + ".retries", "0");
                     }
                 }
+                // 把methodConfig转换成AsyncMethodInfo 异步方法对象
                 AsyncMethodInfo asyncMethodInfo = AbstractConfig.convertMethodConfig2AsyncInfo(methodConfig);
                 if (asyncMethodInfo != null) {
 //                    consumerModel.getMethodModel(methodConfig.getName()).addAttribute(ASYNC_KEY, asyncMethodInfo);
@@ -251,6 +258,7 @@ public class ReferenceConfig<T> extends ReferenceConfigBase<T> {
 
         serviceMetadata.getAttachments().putAll(map);
 
+        // 生成代理类
         ref = createProxy(map);
 
         serviceMetadata.setTarget(ref);
@@ -286,17 +294,21 @@ public class ReferenceConfig<T> extends ReferenceConfigBase<T> {
                         if (UrlUtils.isRegistry(url)) {
                             urls.add(url.addParameterAndEncoded(REFER_KEY, StringUtils.toQueryString(map)));
                         } else {
+                            // 如果不是注册中心地址 则要用消费端的配置覆盖某些提供端的配置
                             urls.add(ClusterUtils.mergeUrl(url, map));
                         }
                     }
                 }
             } else { // assemble URL from register center's configuration
                 // if protocols not injvm checkRegistry
+                // 从注册中心的配置中组装URL
                 if (!LOCAL_PROTOCOL.equalsIgnoreCase(getProtocol())) {
                     checkRegistry();
+                    // 获得注册中心地址
                     List<URL> us = ConfigValidationUtils.loadRegistries(this, false);
                     if (CollectionUtils.isNotEmpty(us)) {
                         for (URL u : us) {
+                            // 根据注册中心地址获取监控中心地址
                             URL monitorUrl = ConfigValidationUtils.loadMonitor(this, u);
                             if (monitorUrl != null) {
                                 map.put(MONITOR_KEY, URL.encode(monitorUrl.toFullString()));
@@ -318,13 +330,16 @@ public class ReferenceConfig<T> extends ReferenceConfigBase<T> {
                 for (URL url : urls) {
                     invokers.add(REF_PROTOCOL.refer(interfaceClass, url));
                     if (UrlUtils.isRegistry(url)) {
+                        // 使用上一个注册表url
                         registryURL = url; // use last registry url
                     }
                 }
                 if (registryURL != null) { // registry url is available
                     // for multi-subscription scenario, use 'zone-aware' policy by default
+                    // 对于多订阅场景，默认使用“区域感知”策略
                     URL u = registryURL.addParameterIfAbsent(CLUSTER_KEY, ZoneAwareCluster.NAME);
                     // The invoker wrap relation would be like: ZoneAwareClusterInvoker(StaticDirectory) -> FailoverClusterInvoker(RegistryDirectory, routing happens here) -> Invoker
+                    // 调用程序包装关系如下
                     invoker = CLUSTER.join(new StaticDirectory(u, invokers));
                 } else { // not a registry url, must be direct invoke.
                     invoker = CLUSTER.join(new StaticDirectory(invokers));
@@ -358,12 +373,15 @@ public class ReferenceConfig<T> extends ReferenceConfigBase<T> {
             metadataService.publishServiceDefinition(consumerURL);
         }
         // create service proxy
+        // 创建服务代理
         return (T) PROXY_FACTORY.getProxy(invoker);
     }
 
     /**
      * This method should be called right after the creation of this class's instance, before any property in other config modules is used.
      * Check each config modules are created properly and override their properties if necessary.
+     * 在使用其他配置模块中的任何属性之前，应该在创建该类的实例之后立即调用此方法。
+     * 检查每个配置模块的创建是否正确，并在必要时覆盖它们的属性。
      */
     public void checkAndUpdateSubConfigs() {
         if (StringUtils.isEmpty(interfaceName)) {
@@ -376,6 +394,7 @@ public class ReferenceConfig<T> extends ReferenceConfigBase<T> {
             }
         }
         // get consumer's global configuration
+        // 如果consumer为空 则去配置管理拿consumer
         checkDefault();
         this.refresh();
         if (getGeneric() == null && getConsumer() != null) {
@@ -411,8 +430,11 @@ public class ReferenceConfig<T> extends ReferenceConfigBase<T> {
                 null,
                 serviceMetadata);
 
+        // 在全局获取url地址
         resolveFile();
+        // 做前置配置校验
         ConfigValidationUtils.validateReferenceConfig(this);
+        // 给予调用者修改配置的地方
         appendParameters();
     }
 
@@ -424,6 +446,8 @@ public class ReferenceConfig<T> extends ReferenceConfigBase<T> {
      * 3. otherwise, check scope parameter
      * 4. if scope is not specified but the target service is provided in the same JVM, then prefer to make the local
      * call, which is the default behavior
+     *
+     * Figure out应该从配置中引用相同JVM中的服务。默认行为为true
      */
     protected boolean shouldJvmRefer(Map<String, String> map) {
         URL tmpUrl = new URL("temp", "localhost", 0, map);

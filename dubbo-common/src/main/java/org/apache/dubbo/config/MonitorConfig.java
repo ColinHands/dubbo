@@ -34,6 +34,7 @@ public class MonitorConfig extends AbstractConfig {
     /**
      * The protocol of the monitor, if the value is registry, it will search the monitor address from the registry center,
      * otherwise, it will directly connect to the monitor center
+     * 监视器的协议，如果值是registry，它将从注册中心搜索监视器地址，否则，它将直接连接到监视器中心
      */
     private String protocol;
 
@@ -56,6 +57,7 @@ public class MonitorConfig extends AbstractConfig {
 
     private String version;
 
+    // 时间间隔
     private String interval;
 
     /**

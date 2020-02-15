@@ -172,6 +172,7 @@ public class RegistryProtocol implements Protocol {
 
     public void register(URL registryUrl, URL registeredProviderUrl) {
         Registry registry = registryFactory.getRegistry(registryUrl);
+        // 向注册中心注册服务
         registry.register(registeredProviderUrl);
 
         ProviderModel model = ApplicationModel.getProviderModel(registeredProviderUrl.getServiceKey());
@@ -203,6 +204,8 @@ public class RegistryProtocol implements Protocol {
 
         // url to registry
         final Registry registry = getRegistry(originInvoker);
+        // 返回注册表中注册的url并过滤url参数一次
+        // 返回注册表中注册的url并过滤url参数一次
         final URL registeredProviderUrl = getUrlToRegistry(providerUrl, registryUrl);
         // decide if we need to delay publish
         boolean register = providerUrl.getParameter(REGISTER_KEY, true);
@@ -228,6 +231,7 @@ public class RegistryProtocol implements Protocol {
 
     @SuppressWarnings("unchecked")
     private <T> ExporterChangeableWrapper<T> doLocalExport(final Invoker<T> originInvoker, URL providerUrl) {
+        // 通过调用程序在界限中缓存密钥
         String key = getCacheKey(originInvoker);
 
         // 这里的protocol是DubboProtocol
@@ -319,12 +323,14 @@ public class RegistryProtocol implements Protocol {
 
     /**
      * Return the url that is registered to the registry and filter the url parameter once
+     * 返回注册表中注册的url并过滤url参数一次
      *
      * @param providerUrl
      * @return url to registry.
      */
     private URL getUrlToRegistry(final URL providerUrl, final URL registryUrl) {
         //The address you see at the registry
+        // 如果是简化模式注册 则移除提供者配置上的某些配置项
         if (!registryUrl.getParameter(SIMPLIFIED_KEY, false)) {
             return providerUrl.removeParameters(getFilteredKeys(providerUrl)).removeParameters(
                     MONITOR_KEY, BIND_IP_KEY, BIND_PORT_KEY, QOS_ENABLE, QOS_HOST, QOS_PORT, ACCEPT_FOREIGN_IP, VALIDATION_KEY,
@@ -334,6 +340,7 @@ public class RegistryProtocol implements Protocol {
             // if path is not the same as interface name then we should keep INTERFACE_KEY,
             // otherwise, the registry structure of zookeeper would be '/dubbo/path/providers',
             // but what we expect is '/dubbo/interface/providers'
+            // 如果路径和接口名不一样，那么我们应该保持INTERFACE_KEY，否则，zookeeper的注册结构应该是‘/dubbo/path/providers’，但我们期望的是‘/dubbo/interface/providers’。
             if (!providerUrl.getPath().equals(providerUrl.getParameter(INTERFACE_KEY))) {
                 if (StringUtils.isNotEmpty(extraKeys)) {
                     extraKeys += ",";

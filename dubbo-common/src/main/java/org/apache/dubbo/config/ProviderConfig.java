@@ -101,6 +101,7 @@ public class ProviderConfig extends AbstractServiceConfig {
 
     /**
      * How information gets exchanged
+     * 信息是如何交换的
      */
     private String exchanger;
 
@@ -131,6 +132,7 @@ public class ProviderConfig extends AbstractServiceConfig {
 
     /**
      * Command line prompt
+     * 命令行提示符
      */
     private String prompt;
 
@@ -141,6 +143,7 @@ public class ProviderConfig extends AbstractServiceConfig {
 
     /**
      * Wait time when stop
+     * 停止时的等待时间
      */
     private Integer wait;
 

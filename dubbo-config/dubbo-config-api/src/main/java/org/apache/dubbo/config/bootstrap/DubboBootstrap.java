@@ -590,7 +590,7 @@ public class DubboBootstrap extends GenericEventListener {
      * there's no config center specified explicitly.
      */
     private void useRegistryAsConfigCenterIfNecessary() {
-        // we use the loading status of DynamicConfiguration to decide whether ConfigCenter has been initiated.
+        // we use the loading status of DynamicConfiguration to decide whether ConfigCenter has been initiated.  我们使用DynamicConfiguration的加载状态来决定是否启动了ConfigCenter。
         if (environment.getDynamicConfiguration().isPresent()) {
             return;
         }

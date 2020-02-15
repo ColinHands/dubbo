@@ -41,6 +41,7 @@ public class ProtocolConfig extends AbstractConfig {
 
     /**
      * Service ip address (when there are multiple network cards available)
+     * 服务ip地址(当有多个网卡可用时)
      */
     private String host;
 
@@ -101,6 +102,7 @@ public class ProtocolConfig extends AbstractConfig {
 
     /**
      * Payload max length
+     * 有效载荷最大长度
      */
     private Integer payload;
 
@@ -121,11 +123,13 @@ public class ProtocolConfig extends AbstractConfig {
 
     /**
      * Transporter
+     * 转运体
      */
     private String transporter;
 
     /**
      * How information is exchanged
+     * 信息是如何交换的
      */
     private String exchanger;
 
@@ -136,6 +140,7 @@ public class ProtocolConfig extends AbstractConfig {
 
     /**
      * Networker
+     * 沟通者
      */
     private String networker;
 
@@ -151,11 +156,13 @@ public class ProtocolConfig extends AbstractConfig {
 
     /**
      * Supported telnet commands, separated with comma.
+     * 用逗号分开。
      */
     private String telnet;
 
     /**
      * Command line prompt
+     * 命令行提示符
      */
     private String prompt;
 
@@ -171,11 +178,13 @@ public class ProtocolConfig extends AbstractConfig {
 
     /**
      * whether it is a persistent connection
+     * 是否为持久连接
      */
     //TODO add this to provider config
     private Boolean keepAlive;
 
     // TODO add this to provider config
+    // 优化器
     private String optimizer;
 
     /**

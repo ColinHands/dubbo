@@ -66,6 +66,11 @@ public class ServiceRepository extends LifecycleAdapter implements FrameworkExt 
      * 2. services share the same interface but has different group/version can share the same path.
      * 3. path's default value is the name of the interface.
      *
+     * 我们假设:
+     * 具有不同接口的服务不允许具有相同的路径。
+     * 服务共享相同的接口，但具有不同的组/版本可以共享相同的路径。
+     * path的默认值是接口的名称。
+     *
      * @param path
      * @param interfaceClass
      * @return
@@ -73,6 +78,7 @@ public class ServiceRepository extends LifecycleAdapter implements FrameworkExt 
     public ServiceDescriptor registerService(String path, Class<?> interfaceClass) {
         ServiceDescriptor serviceDescriptor = registerService(interfaceClass);
         // if path is different with interface name, add extra path mapping
+        // 如果路径与接口名不同，则添加额外的路径映射
         if (!interfaceClass.getName().equals(path)) {
             services.putIfAbsent(path, serviceDescriptor);
         }

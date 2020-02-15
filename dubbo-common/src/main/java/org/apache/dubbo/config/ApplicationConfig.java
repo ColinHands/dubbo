@@ -73,16 +73,19 @@ public class ApplicationConfig extends AbstractConfig {
 
     /**
      * Application's organization (BU)
+     * 应用程序的组织(BU)
      */
     private String organization;
 
     /**
      * Architecture layer
+     * 架构层
      */
     private String architecture;
 
     /**
      * Environment, e.g. dev, test or production
+     * 环境，例如开发、测试或生产
      */
     private String environment;
 
@@ -109,16 +112,19 @@ public class ApplicationConfig extends AbstractConfig {
 
     /**
      * Is default or not
+     * 是否默认
      */
     private Boolean isDefault;
 
     /**
      * Directory for saving thread dump
+     * 保存线程转储的目录
      */
     private String dumpDirectory;
 
     /**
      * Whether to enable qos or not
+     * 是否启用qos
      */
     private Boolean qosEnable;
 
@@ -129,11 +135,13 @@ public class ApplicationConfig extends AbstractConfig {
 
     /**
      * The qos port to listen
+     * 要侦听的qos端口
      */
     private Integer qosPort;
 
     /**
      * Should we accept foreign ip or not?
+     * 我们是否应该接受foreign ip?
      */
     private Boolean qosAcceptForeignIp;
 
@@ -151,6 +159,7 @@ public class ApplicationConfig extends AbstractConfig {
 
     /**
      * Metadata type, local or remote, if choose remote, you need to further specify metadata center.
+     * 元数据类型，本地或远程，如果选择远程，则需要进一步指定元数据中心。
      */
     private String metadataType;
 
@@ -454,6 +463,8 @@ public class ApplicationConfig extends AbstractConfig {
             parameters = new HashMap<>();
         }
 
+        // 在ConfigurationUtils.getProperty(DUBBO_LABELS); ConfigurationUtils.getProperty(DUBBO_ENV_KEYS);
+        // 实质就是在CompositeConfiguration 对象里查找 dubbo.labels 、dubbo.env.keys的值并放入parameters中
         Set<InfraAdapter> adapters = ExtensionLoader.getExtensionLoader(InfraAdapter.class).getSupportedExtensionInstances();
         if (CollectionUtils.isNotEmpty(adapters)) {
             Map<String, String> inputParameters = new HashMap<>();
