@@ -104,6 +104,9 @@ public abstract class AbstractRegistryFactory implements RegistryFactory {
             return DEFAULT_NOP_REGISTRY;
         }
 
+        // 这里的url已经在前面替换过一次protocol了
+        // url为：
+        // 移除掉export和refer属性
         url = URLBuilder.from(url)
                 .setPath(RegistryService.class.getName())
                 .addParameter(INTERFACE_KEY, RegistryService.class.getName())
@@ -113,11 +116,13 @@ public abstract class AbstractRegistryFactory implements RegistryFactory {
         // Lock the registry access process to ensure a single instance of the registry
         LOCK.lock();
         try {
+            // 缓存获取
             Registry registry = REGISTRIES.get(key);
             if (registry != null) {
                 return registry;
             }
             //create registry by spi/ioc
+            // 没有从缓存获取到则创建 创建逻辑委托给子类 例如zookeeper
             registry = createRegistry(url);
             if (registry == null) {
                 throw new IllegalStateException("Can not create registry " + url);

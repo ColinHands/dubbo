@@ -100,6 +100,7 @@ public class ClusterUtils {
             map.put(REMOTE_APPLICATION_KEY, remoteMap.get(APPLICATION_KEY));
 
             // Combine filters and listeners on Provider and Consumer
+            // 在提供者和使用者上组合过滤器和侦听器
             String remoteFilter = remoteMap.get(REFERENCE_FILTER_KEY);
             String localFilter = copyOfLocalMap.get(REFERENCE_FILTER_KEY);
             if (remoteFilter != null && remoteFilter.length() > 0

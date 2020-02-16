@@ -388,7 +388,12 @@ public class RegistryProtocol implements Protocol {
     @Override
     @SuppressWarnings("unchecked")
     public <T> Invoker<T> refer(Class<T> type, URL url) throws RpcException {
+        // 获取引用服务的url 这里的操作是用正在的协议替换注册协议
         url = getRegistryUrl(url);
+        // 先调用 RegistryFactoryWrapper 创建ListenerRegistryWrapper
+        // 根据url获取RegistryServiceListener拓展
+        // 实现监听功能
+        // 实际获取注册中心类的类是 AbstractRegistryFactory
         Registry registry = registryFactory.getRegistry(url);
         if (RegistryService.class.equals(type)) {
             return proxyFactory.getInvoker((T) registry, type, url);
@@ -398,6 +403,7 @@ public class RegistryProtocol implements Protocol {
         Map<String, String> qs = StringUtils.parseQueryString(url.getParameterAndDecoded(REFER_KEY));
         String group = qs.get(GROUP_KEY);
         if (group != null && group.length() > 0) {
+            // 如果引用服务的url的group大于一个组后者为* 则需要得到合并类型（mergeable）的Cluster
             if ((COMMA_SPLIT_PATTERN.split(group)).length > 1 || "*".equals(group)) {
                 return doRefer(getMergeableCluster(), registry, type, url);
             }
@@ -415,12 +421,20 @@ public class RegistryProtocol implements Protocol {
         directory.setProtocol(protocol);
         // all attributes of REFER_KEY
         Map<String, String> parameters = new HashMap<String, String>(directory.getUrl().getParameters());
+        // 生成服务消费者链接 也就是服务使用者的ip地址 注册中心用这个地址通知使用者所引用服务的动态
         URL subscribeUrl = new URL(CONSUMER_PROTOCOL, parameters.remove(REGISTER_IP_KEY), 0, type.getName(), parameters);
+        // 注册服务消费者，在 consumers 目录下新节点
         if (!ANY_VALUE.equals(url.getServiceInterface()) && url.getParameter(REGISTER_KEY, true)) {
+            // 根据引用服务url判断是否为简化模式 如果不是则在消费者url上设置category为consumers
+            // 并设置到directory里
             directory.setRegisteredConsumerUrl(getRegisteredConsumerUrl(subscribeUrl, url));
+            // 注册服务消费者，在 consumers 目录下新节点
             registry.register(directory.getRegisteredConsumerUrl());
         }
+        // 构建路由链 根据 subscribeUrl的router值获得SPI router工厂类集合
+        // 然后遍历这些工厂类创建出router集合
         directory.buildRouterChain(subscribeUrl);
+        // // 订阅 providers、configurators、routers 等节点数据
         directory.subscribe(subscribeUrl.addParameter(CATEGORY_KEY,
                 PROVIDERS_CATEGORY + "," + CONFIGURATORS_CATEGORY + "," + ROUTERS_CATEGORY));
 
@@ -429,10 +443,13 @@ public class RegistryProtocol implements Protocol {
     }
 
     public URL getRegisteredConsumerUrl(final URL consumerUrl, URL registryUrl) {
+        // 根据引用服务url判断是否为简化模式 如果不是则在消费者url上设置category为consumers
+        // check为false
         if (!registryUrl.getParameter(SIMPLIFIED_KEY, false)) {
             return consumerUrl.addParameters(CATEGORY_KEY, CONSUMERS_CATEGORY,
                     CHECK_KEY, String.valueOf(false));
         } else {
+            // 如果是简化模式则url里只有DEFAULT_REGISTER_CONSUMER_KEYS规定的键值
             return URL.valueOf(consumerUrl, DEFAULT_REGISTER_CONSUMER_KEYS, null).addParameters(
                     CATEGORY_KEY, CONSUMERS_CATEGORY, CHECK_KEY, String.valueOf(false));
         }

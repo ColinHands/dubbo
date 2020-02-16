@@ -190,6 +190,8 @@ public class ConfigValidationUtils {
 
                     for (URL url : urls) {
 
+                        // 这里把正在处理服务引用的协议放到了REGISTER_KEY参数里
+                        // 在注册protocol里再在url里拿出正在的协议 并让协议类去引用服务
                         url = URLBuilder.from(url)
                                 .addParameter(REGISTRY_KEY, url.getProtocol())
                                 .setProtocol(extractRegistryType(url))

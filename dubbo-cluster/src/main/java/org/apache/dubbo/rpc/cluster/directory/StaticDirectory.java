@@ -44,6 +44,8 @@ public class StaticDirectory<T> extends AbstractDirectory<T> {
         this(null, invokers, routerChain);
     }
 
+    // 这里的invokers 有些复杂 它的每一项有可能是AbstractClusterInvoker
+    // AbstractClusterInvoker 里有注册目录 它用来例举服务
     public StaticDirectory(URL url, List<Invoker<T>> invokers) {
         this(url, invokers, null);
     }
