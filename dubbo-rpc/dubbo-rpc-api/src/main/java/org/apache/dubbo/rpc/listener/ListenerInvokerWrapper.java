@@ -30,6 +30,8 @@ import java.util.List;
 
 /**
  * ListenerInvoker
+ * 1、也就是服务invoker引用成功的时候执行listeners的listener.referred(invoker)
+ * 2、在执行invoker的destroy()方法时执行listeners的listener.destroyed(invoker)
  */
 public class ListenerInvokerWrapper<T> implements Invoker<T> {
 
@@ -75,6 +77,7 @@ public class ListenerInvokerWrapper<T> implements Invoker<T> {
 
     @Override
     public Result invoke(Invocation invocation) throws RpcException {
+        // ProtocolFilterWrapper
         return invoker.invoke(invocation);
     }
 

@@ -72,18 +72,23 @@ public class MockClusterInvoker<T> implements Invoker<T> {
     public Result invoke(Invocation invocation) throws RpcException {
         Result result = null;
 
+        // 是否设置模拟数据
         String value = directory.getUrl().getMethodParameter(invocation.getMethodName(), MOCK_KEY, Boolean.FALSE.toString()).trim();
         if (value.length() == 0 || "false".equalsIgnoreCase(value)) {
             //no mock
+            // 无 mock 逻辑，直接调用其他 Invoker 对象的 invoke 方法，
+            // 比如 FailoverClusterInvoker
             result = this.invoker.invoke(invocation);
         } else if (value.startsWith("force")) {
             if (logger.isWarnEnabled()) {
                 logger.warn("force-mock: " + invocation.getMethodName() + " force-mock enabled , url : " + directory.getUrl());
             }
+            // force:xxx 直接执行 mock 逻辑，不发起远程调用
             //force:direct mock
             result = doMockInvoke(invocation, null);
         } else {
             //fail-mock
+            // fail:xxx 表示消费方对调用服务失败后，再执行 mock 逻辑，不抛出异常
             try {
                 result = this.invoker.invoke(invocation);
 
@@ -116,7 +121,11 @@ public class MockClusterInvoker<T> implements Invoker<T> {
         Result result = null;
         Invoker<T> minvoker;
 
+        // 直接在服务目录里去例举模拟invoker 在invocation的Attachment里设置invocation.need.mock为true
         List<Invoker<T>> mockInvokers = selectMockInvoker(invocation);
+        // 如果服务目录里没有的话就创建MockInvoker执行
+        // MockInvoker里就会根据url里设置的mock值去执行相应逻辑
+        // return特定值、throw异常、执行方法
         if (CollectionUtils.isEmpty(mockInvokers)) {
             minvoker = (Invoker<T>) new MockInvoker(directory.getUrl(), directory.getInterface());
         } else {
@@ -149,6 +158,8 @@ public class MockClusterInvoker<T> implements Invoker<T> {
      * Contract：
      * directory.list() will return a list of normal invokers if Constants.INVOCATION_NEED_MOCK is present in invocation, otherwise, a list of mock invokers will return.
      * if directory.list() returns more than one mock invoker, only one of them will be used.
+     * list()将返回一个普通调用者列表(如果是常量)。INVOCATION_NEED_MOCK出现在调用中，否则将返回一个模拟调用者列表。
+     * 如果directory.list()返回多个模拟调用程序，则只使用其中一个。
      *
      * @param invocation
      * @return
@@ -158,6 +169,7 @@ public class MockClusterInvoker<T> implements Invoker<T> {
         //TODO generic invoker？
         if (invocation instanceof RpcInvocation) {
             //Note the implicit contract (although the description is added to the interface declaration, but extensibility is a problem. The practice placed in the attachment needs to be improved)
+            // 注意隐式契约(虽然描述被添加到接口声明中，但是可扩展性是一个问题。附件中的做法需要改进)
             ((RpcInvocation) invocation).setAttachment(INVOCATION_NEED_MOCK, Boolean.TRUE.toString());
             //directory will return a list of normal invokers if Constants.INVOCATION_NEED_MOCK is present in invocation, otherwise, a list of mock invokers will return.
             try {

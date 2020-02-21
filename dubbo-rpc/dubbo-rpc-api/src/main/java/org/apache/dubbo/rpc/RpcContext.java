@@ -608,6 +608,7 @@ public class RpcContext {
         return invokers == null && invoker != null ? (List) Arrays.asList(invoker) : invokers;
     }
 
+    // 会在FailoverClusterInvoker用负载均衡器选择invoker 时调用 存的是已经选在的
     public RpcContext setInvokers(List<Invoker<?>> invokers) {
         this.invokers = invokers;
         if (CollectionUtils.isNotEmpty(invokers)) {

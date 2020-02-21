@@ -775,12 +775,14 @@ class URL implements Serializable {
         return URL.decode(getMethodParameter(method, key, defaultValue));
     }
 
+    // methodParameters储存方法相关的参数 key为方法名 value为参数Map
     public String getMethodParameter(String method, String key) {
         Map<String, String> keyMap = methodParameters.get(method);
         String value = null;
         if (keyMap != null) {
             value = keyMap.get(key);
         }
+        // 如果针对方法的设置没找到 就用整个类的设置
         if (StringUtils.isEmpty(value)) {
             value = parameters.get(key);
         }

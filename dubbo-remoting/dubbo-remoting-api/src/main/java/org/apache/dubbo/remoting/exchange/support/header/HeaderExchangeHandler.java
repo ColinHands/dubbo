@@ -56,6 +56,7 @@ public class HeaderExchangeHandler implements ChannelHandlerDelegate {
     }
 
     static void handleResponse(Channel channel, Response response) throws RemotingException {
+        // 处理响应 response不能是心跳检测事件
         if (response != null && !response.isHeartbeat()) {
             DefaultFuture.received(channel, response);
         }
@@ -77,6 +78,7 @@ public class HeaderExchangeHandler implements ChannelHandlerDelegate {
 
     void handleRequest(final ExchangeChannel channel, Request req) throws RemotingException {
         Response res = new Response(req.getId(), req.getVersion());
+        // 检测请求是否合法，不合法则返回状态码为 BAD_REQUEST 的响应
         if (req.isBroken()) {
             Object data = req.getData();
 
@@ -95,9 +97,13 @@ public class HeaderExchangeHandler implements ChannelHandlerDelegate {
             return;
         }
         // find handler by message class.
+        // 获取 data 字段值，也就是 RpcInvocation 对象
         Object msg = req.getData();
         try {
+            // 此时这个地方的handler是DubboProtocol.requestHandler 的内部类 用来处理
+            // 正在的服务逻辑 当然处理之前要经过过滤器的处理 和监听器
             CompletionStage<Object> future = handler.reply(channel, msg);
+            // 等待future执行完成 把返回的信息再用channel发送到客户端
             future.whenComplete((appResult, t) -> {
                 try {
                     if (t == null) {
@@ -167,17 +173,27 @@ public class HeaderExchangeHandler implements ChannelHandlerDelegate {
         final ExchangeChannel exchangeChannel = HeaderExchangeChannel.getOrAddChannel(channel);
         if (message instanceof Request) {
             // handle request.
+            // 处理请求对象
             Request request = (Request) message;
             if (request.isEvent()) {
+                // 处理事件
                 handlerEvent(channel, request);
             } else {
+                // 处理普通的请求
+                // 双向通信
                 if (request.isTwoWay()) {
+                    // 向后调用服务，并得到调用结果
+                    // 处理完之后会直接调用exchangeChannel把结果发送会客户端
                     handleRequest(exchangeChannel, request);
                 } else {
+                    // 如果是单向通信，仅向后调用指定服务即可，无需返回调用结果
+                    // 此时这个地方的handler是DubboProtocol.requestHandler 的内部类 用来处理
+                    // 正在的服务逻辑 当然处理之前要经过过滤器的处理 和监听器
                     handler.received(exchangeChannel, request.getData());
                 }
             }
         } else if (message instanceof Response) {
+            // 处理响应对象，服务消费方会执行此处逻辑，后面分析
             handleResponse(channel, (Response) message);
         } else if (message instanceof String) {
             if (isClientSide(channel)) {

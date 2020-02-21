@@ -56,9 +56,11 @@ public abstract class AbstractClient extends AbstractEndpoint implements Client 
 
         needReconnect = url.getParameter(Constants.SEND_RECONNECT_KEY, false);
 
+        // 根据url的线程池类型 threadpool threadname 委托executorRepository创建缓存ExecutorService
         initExecutor(url);
 
         try {
+            // 子类实现此方法 让通信客户端打开
             doOpen();
         } catch (Throwable t) {
             close();
@@ -68,6 +70,7 @@ public abstract class AbstractClient extends AbstractEndpoint implements Client 
         }
         try {
             // connect.
+            // 连接服务器 这里的操作会加锁
             connect();
             if (logger.isInfoEnabled()) {
                 logger.info("Start " + getClass().getSimpleName() + " " + NetUtils.getLocalAddress() + " connect to the server " + getRemoteAddress());
@@ -167,14 +170,17 @@ public abstract class AbstractClient extends AbstractEndpoint implements Client 
 
     @Override
     public void send(Object message, boolean sent) throws RemotingException {
+        // 这里发送请求 先经过父类AbstractPeer再到这里
         if (needReconnect && !isConnected()) {
             connect();
         }
+        // 获取 Channel，getChannel 是一个抽象方法，具体由子类实现
         Channel channel = getChannel();
         //TODO Can the value returned by getChannel() be null? need improvement.
         if (channel == null || !channel.isConnected()) {
             throw new RemotingException(this, "message can not send, because channel is closed . url:" + getUrl());
         }
+        // 继续向下调用 NettyChannel
         channel.send(message, sent);
     }
 
@@ -262,6 +268,7 @@ public abstract class AbstractClient extends AbstractEndpoint implements Client 
         }
 
         try {
+            // 关闭executor
             if (executor != null) {
                 ExecutorUtil.shutdownNow(executor, 100);
             }

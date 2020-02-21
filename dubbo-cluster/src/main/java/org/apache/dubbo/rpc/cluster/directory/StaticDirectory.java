@@ -104,6 +104,9 @@ public class StaticDirectory<T> extends AbstractDirectory<T> {
         List<Invoker<T>> finalInvokers = invokers;
         if (routerChain != null) {
             try {
+                // routerChain变量里已经有了invokers
+                // 这个getConsumerUrl()是订阅服务的url 是消费端调用服务的url 里面包含着调用规则
+                // invocation参数是有可能路由规则是定在方法上的 所以需要用invocation得到方法名
                 finalInvokers = routerChain.route(getConsumerUrl(), invocation);
             } catch (Throwable t) {
                 logger.error("Failed to execute router: " + getUrl() + ", cause: " + t.getMessage(), t);

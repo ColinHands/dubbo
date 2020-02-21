@@ -60,6 +60,7 @@ public class RouterChain<T> {
     /**
      * the resident routers must being initialized before address notification.
      * FIXME: this method should not be public
+     * 常驻路由器必须在地址通知之前初始化。
      */
     public void initWithRouters(List<Router> builtinRouters) {
         this.builtinRouters = builtinRouters;
@@ -95,6 +96,7 @@ public class RouterChain<T> {
      */
     public List<Invoker<T>> route(URL url, Invocation invocation) {
         List<Invoker<T>> finalInvokers = invokers;
+        // 把invokers经过路由链筛选
         for (Router router : routers) {
             finalInvokers = router.route(finalInvokers, url, invocation);
         }

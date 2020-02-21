@@ -23,6 +23,7 @@ import org.apache.dubbo.remoting.RemotingException;
 
 public abstract class AbstractChannelHandlerDelegate implements ChannelHandlerDelegate {
 
+    // AllChannelHandler handler为各种派发处理器
     protected ChannelHandler handler;
 
     protected AbstractChannelHandlerDelegate(ChannelHandler handler) {

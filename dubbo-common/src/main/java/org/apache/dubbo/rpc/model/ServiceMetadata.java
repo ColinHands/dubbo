@@ -27,6 +27,8 @@ import java.util.concurrent.ConcurrentHashMap;
  *
  * data related to service level such as name, version, classloader of business service,
  * security info, etc. Also with a AttributeMap for extension.
+ * 与服务级别相关的数据，如业务服务的名称、版本、类加载器、
+ * 安全信息等。还有一个AttributeMap用于扩展。
  */
 public class ServiceMetadata extends BaseServiceMetadata {
 

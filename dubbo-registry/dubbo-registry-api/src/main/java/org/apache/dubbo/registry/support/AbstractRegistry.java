@@ -87,6 +87,7 @@ public abstract class AbstractRegistry implements Registry {
     private final AtomicInteger savePropertiesRetryTimes = new AtomicInteger();
     private final Set<URL> registered = new ConcurrentHashSet<>();
     private final ConcurrentMap<URL, Set<NotifyListener>> subscribed = new ConcurrentHashMap<>();
+    // 保存的是通知到的urls key为消费者的url value是通知给消费者的url集合 会有配置、路由、服务这几类url集合
     private final ConcurrentMap<URL, Map<String, List<URL>>> notified = new ConcurrentHashMap<>();
     private URL registryUrl;
     // Local disk cache file
@@ -383,7 +384,7 @@ public abstract class AbstractRegistry implements Registry {
 
     /**
      * Notify changes from the Provider side.
-     *
+     * 通知时做比对 比对注册的消费者的url和通知的urls 如果他们的ServiceInterface是* 或者相等才是匹配的
      * @param url      consumer side url
      * @param listener listener
      * @param urls     provider latest urls
@@ -420,9 +421,12 @@ public abstract class AbstractRegistry implements Registry {
             String category = entry.getKey();
             List<URL> categoryList = entry.getValue();
             categoryNotified.put(category, categoryList);
+            // 通知动态目录 让其根据categoryList的类型去做相应的操作
             listener.notify(categoryList);
             // We will update our cache file after each notification.
+            // 我们将在每次通知后更新缓存文件 当我们的注册表由于网络抖动而出现订阅失败时，我们至少可以返回现有的缓存URL。
             // When our Registry has a subscribe failure due to network jitter, we can return at least the existing cache URL.
+            // 把通知的url保存到本地
             saveProperties(url);
         }
     }

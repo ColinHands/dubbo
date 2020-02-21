@@ -191,8 +191,12 @@ public abstract class AbstractInterfaceConfig extends AbstractMethodConfig {
      * Check whether the registry config is exists, and then conversion it to {@link RegistryConfig}
      */
     public void checkRegistry() {
+        // 验证registryIds是否为空，如果为空则获取ApplicationConfig的registryIds 并设置之
+        // 2、registryIds为空并且registries也为空 则通过ApplicationModel.getConfigManager().getDefaultRegistries()获取List<RegistryConfig> 如果还是为空则新建RegistryConfig并刷新之
+        // 3、如果之前if分支registryIds 不为空的话 则以逗号分隔字符传并遍历id 首先根据id在配置管理里查找ApplicationModel.getConfigManager().getRegistry(id)如果存在则加入集合中否则根据id创建RegistryConfig并刷新之
         convertRegistryIdsToRegistries();
 
+        // 遍历registries 验证可用性（address是否为空）
         for (RegistryConfig registryConfig : registries) {
             if (!registryConfig.isValid()) {
                 throw new IllegalStateException("No registry config found or it's not a valid config! " +

@@ -34,6 +34,13 @@ import static org.apache.dubbo.common.constants.CommonConstants.REFERENCE_INTERC
 
 public abstract class AbstractCluster implements Cluster {
 
+    /**
+     * 给AbstractClusterInvoker增加拦截器
+     * @param clusterInvoker
+     * @param key
+     * @param <T>
+     * @return
+     */
     private <T> Invoker<T> buildClusterInterceptors(AbstractClusterInvoker<T> clusterInvoker, String key) {
         AbstractClusterInvoker<T> last = clusterInvoker;
         List<ClusterInterceptor> interceptors = ExtensionLoader.getExtensionLoader(ClusterInterceptor.class).getActivateExtension(clusterInvoker.getUrl(), key);
@@ -126,6 +133,7 @@ public abstract class AbstractCluster implements Cluster {
         @Override
         protected Result doInvoke(Invocation invocation, List<Invoker<T>> invokers, LoadBalance loadbalance) throws RpcException {
             // The only purpose is to build a interceptor chain, so the cluster related logic doesn't matter.
+            // 唯一的目的是构建一个拦截器链，因此与集群相关的逻辑无关紧要。
             return null;
         }
     }

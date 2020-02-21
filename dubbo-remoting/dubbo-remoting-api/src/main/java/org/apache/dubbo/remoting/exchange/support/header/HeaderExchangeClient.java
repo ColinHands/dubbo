@@ -199,7 +199,9 @@ public class HeaderExchangeClient implements ExchangeClient {
     private void startReconnectTask(URL url) {
         if (shouldReconnect(url)) {
             AbstractTimerTask.ChannelProvider cp = () -> Collections.singletonList(HeaderExchangeClient.this);
+            // 获取延迟时间 延迟时间必须大于心跳时间的两倍
             int idleTimeout = getIdleTimeout(url);
+            // 计算有几个间隔 每个间隔不小于1000
             long heartbeatTimeoutTick = calculateLeastDuration(idleTimeout);
             this.reconnectTimerTask = new ReconnectTimerTask(cp, heartbeatTimeoutTick, idleTimeout);
             IDLE_CHECK_TIMER.newTimeout(reconnectTimerTask, heartbeatTimeoutTick, TimeUnit.MILLISECONDS);
@@ -218,6 +220,7 @@ public class HeaderExchangeClient implements ExchangeClient {
 
     /**
      * Each interval cannot be less than 1000ms.
+     * 每个间隔不能小于1000ms。
      */
     private long calculateLeastDuration(int time) {
         if (time / HEARTBEAT_CHECK_TICK <= 0) {

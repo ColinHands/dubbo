@@ -154,7 +154,9 @@ public abstract class AbstractInvoker<T> implements Invoker<T> {
             invocation.addAttachments(contextAttachments);
         }
 
+        // 设置调用类型 异步、同步、CompletableFuture
         invocation.setInvokeMode(RpcUtils.getInvokeMode(url, invocation));
+        // 幂等操作:默认情况下，调用id将在异步操作中添加
         RpcUtils.attachInvocationIdIfAsync(getUrl(), invocation);
 
         AsyncRpcResult asyncResult;

@@ -52,14 +52,19 @@ public class ChannelEventRunnable implements Runnable {
 
     @Override
     public void run() {
+        // 检测通道状态，对于请求或响应消息，此时 state = RECEIVED
         if (state == ChannelState.RECEIVED) {
             try {
+                // handler 为 DecodeHandler 用来把接收到字符解码成对象
+                // channel会一直传递下午知道 调用完服务再把结果通过这个channel发送给客户端
+                // 此handler为DecodeHandler 处理编码或者解码
                 handler.received(channel, message);
             } catch (Exception e) {
                 logger.warn("ChannelEventRunnable handle " + state + " operation error, channel is " + channel
                         + ", message is " + message, e);
             }
         } else {
+            // 其他消息类型通过 switch 进行处理
             switch (state) {
             case CONNECTED:
                 try {

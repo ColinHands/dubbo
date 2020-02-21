@@ -22,8 +22,10 @@ import org.apache.dubbo.remoting.Constants;
 
 public class UrlUtils {
     public static int getIdleTimeout(URL url) {
+        // 获取心跳检测间隔
         int heartBeat = getHeartbeat(url);
         // idleTimeout should be at least more than twice heartBeat because possible retries of client.
+        // idleTimeout应该至少超过两次心跳，因为可能会重试客户端
         int idleTimeout = url.getParameter(Constants.HEARTBEAT_TIMEOUT_KEY, heartBeat * 3);
         if (idleTimeout < heartBeat * 2) {
             throw new IllegalStateException("idleTimeout < heartbeatInterval * 2");

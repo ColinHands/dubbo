@@ -340,7 +340,9 @@ public class RegistryProtocol implements Protocol {
             // if path is not the same as interface name then we should keep INTERFACE_KEY,
             // otherwise, the registry structure of zookeeper would be '/dubbo/path/providers',
             // but what we expect is '/dubbo/interface/providers'
-            // 如果路径和接口名不一样，那么我们应该保持INTERFACE_KEY，否则，zookeeper的注册结构应该是‘/dubbo/path/providers’，但我们期望的是‘/dubbo/interface/providers’。
+            // 如果路径和接口名不一样，那么我们应该保持INTERFACE_KEY，
+            // 否则，zookeeper的注册结构应该是‘/dubbo/path/providers’，
+            // 但我们期望的是‘/dubbo/interface/providers’。
             if (!providerUrl.getPath().equals(providerUrl.getParameter(INTERFACE_KEY))) {
                 if (StringUtils.isNotEmpty(extraKeys)) {
                     extraKeys += ",";
@@ -388,7 +390,9 @@ public class RegistryProtocol implements Protocol {
     @Override
     @SuppressWarnings("unchecked")
     public <T> Invoker<T> refer(Class<T> type, URL url) throws RpcException {
-        // 获取引用服务的url 这里的操作是用正在的协议替换注册协议
+        // 获取引用服务的url 这里的操作是用实际的注册中心协议替换默认registry协议
+        // 把registry://127.0.0.1:2181/org.apache.dubbo.registry.RegistryService?application=dubbo-demo-annotation-consumer&dubbo=2.0.2&pid=13590&refer=application%3Ddubbo-demo-annotation-consumer%26dubbo%3D2.0.2%26init%3Dfalse%26interface%3Dorg.apache.dubbo.demo.DemoService%26methods%3DsayHello%2CsayHelloAsync%26pid%3D13590%26register.ip%3D192.168.125.101%26side%3Dconsumer%26sticky%3Dfalse%26timestamp%3D1582183103354&registry=zookeeper&timestamp=1582213962729
+        // 换成zookeeper://127.0.0.1:2181/org.apache.dubbo.registry.RegistryService?application=dubbo-demo-annotation-consumer&dubbo=2.0.2&pid=13590&refer=application%3Ddubbo-demo-annotation-consumer%26dubbo%3D2.0.2%26init%3Dfalse%26interface%3Dorg.apache.dubbo.demo.DemoService%26methods%3DsayHello%2CsayHelloAsync%26pid%3D13590%26register.ip%3D192.168.125.101%26side%3Dconsumer%26sticky%3Dfalse%26timestamp%3D1582183103354&timestamp=1582213962729
         url = getRegistryUrl(url);
         // 先调用 RegistryFactoryWrapper 创建ListenerRegistryWrapper
         // 根据url获取RegistryServiceListener拓展
@@ -399,11 +403,11 @@ public class RegistryProtocol implements Protocol {
             return proxyFactory.getInvoker((T) registry, type, url);
         }
 
-        // group="a,b" or group="*"
+        // group="a,b" or group="*" 正在引用服务的信息
         Map<String, String> qs = StringUtils.parseQueryString(url.getParameterAndDecoded(REFER_KEY));
         String group = qs.get(GROUP_KEY);
         if (group != null && group.length() > 0) {
-            // 如果引用服务的url的group大于一个组后者为* 则需要得到合并类型（mergeable）的Cluster
+            // 如果引用服务的url的group大于一个组或者为* 则需要得到合并类型（mergeable）的Cluster
             if ((COMMA_SPLIT_PATTERN.split(group)).length > 1 || "*".equals(group)) {
                 return doRefer(getMergeableCluster(), registry, type, url);
             }
@@ -416,17 +420,21 @@ public class RegistryProtocol implements Protocol {
     }
 
     private <T> Invoker<T> doRefer(Cluster cluster, Registry registry, Class<T> type, URL url) {
+        // url 为zookeeper://127.0.0.1:2181/org.apache.dubbo.registry.RegistryService?application=dubbo-demo-annotation-consumer&dubbo=2.0.2&pid=13590&refer=application%3Ddubbo-demo-annotation-consumer%26dubbo%3D2.0.2%26init%3Dfalse%26interface%3Dorg.apache.dubbo.demo.DemoService%26methods%3DsayHello%2CsayHelloAsync%26pid%3D13590%26register.ip%3D192.168.125.101%26side%3Dconsumer%26sticky%3Dfalse%26timestamp%3D1582183103354&timestamp=1582213962729
         RegistryDirectory<T> directory = new RegistryDirectory<T>(type, url);
         directory.setRegistry(registry);
         directory.setProtocol(protocol);
-        // all attributes of REFER_KEY
+        // all attributes of REFER_KEY 获取的是动态目录的overrideDirectoryUrl 中 的parameters
         Map<String, String> parameters = new HashMap<String, String>(directory.getUrl().getParameters());
         // 生成服务消费者链接 也就是服务使用者的ip地址 注册中心用这个地址通知使用者所引用服务的动态
+        // consumer://192.168.125.101/org.apache.dubbo.demo.DemoService?application=dubbo-demo-annotation-consumer&dubbo=2.0.2&init=false&interface=org.apache.dubbo.demo.DemoService&methods=sayHello,sayHelloAsync&pid=12945&side=consumer&sticky=false&timestamp=1582161832827
         URL subscribeUrl = new URL(CONSUMER_PROTOCOL, parameters.remove(REGISTER_IP_KEY), 0, type.getName(), parameters);
         // 注册服务消费者，在 consumers 目录下新节点
         if (!ANY_VALUE.equals(url.getServiceInterface()) && url.getParameter(REGISTER_KEY, true)) {
             // 根据引用服务url判断是否为简化模式 如果不是则在消费者url上设置category为consumers
+            // check为false
             // 并设置到directory里
+            // consumer://192.168.125.101/org.apache.dubbo.demo.DemoService?application=dubbo-demo-annotation-consumer&category=consumers&check=false&dubbo=2.0.2&init=false&interface=org.apache.dubbo.demo.DemoService&methods=sayHello,sayHelloAsync&pid=13590&side=consumer&sticky=false&timestamp=1582183103354
             directory.setRegisteredConsumerUrl(getRegisteredConsumerUrl(subscribeUrl, url));
             // 注册服务消费者，在 consumers 目录下新节点
             registry.register(directory.getRegisteredConsumerUrl());
@@ -434,10 +442,14 @@ public class RegistryProtocol implements Protocol {
         // 构建路由链 根据 subscribeUrl的router值获得SPI router工厂类集合
         // 然后遍历这些工厂类创建出router集合
         directory.buildRouterChain(subscribeUrl);
-        // // 订阅 providers、configurators、routers 等节点数据
+        // 订阅 providers、configurators、routers 等节点数据
         directory.subscribe(subscribeUrl.addParameter(CATEGORY_KEY,
                 PROVIDERS_CATEGORY + "," + CONFIGURATORS_CATEGORY + "," + ROUTERS_CATEGORY));
 
+        // 调用MockClusterWrapper 创建MockClusterInvoker
+        // 让调用有mock数据的功能 MockClusterInvoker 中的invoker类型是InterceptorInvokerNode，
+        // InterceptorInvokerNode里有FailoverClusterInvoker和ClusterInterceptor，
+        // 的主要作用是给FailoverClusterInvoker加了拦截器 责任链模式
         Invoker invoker = cluster.join(directory);
         return invoker;
     }

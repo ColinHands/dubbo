@@ -140,8 +140,10 @@ public class RpcInvocation implements Invocation, Serializable {
     }
 
     private void initParameterDesc() {
+        // 获得服务存储器
         ServiceRepository repository = ApplicationModel.getServiceRepository();
         if (StringUtils.isNotEmpty(serviceName)) {
+            // 在存储器里找serviceName的ServiceDescriptor
             ServiceDescriptor serviceDescriptor = repository.lookupService(serviceName);
             if (serviceDescriptor != null) {
                 MethodDescriptor methodDescriptor = serviceDescriptor.getMethod(methodName, parameterTypes);

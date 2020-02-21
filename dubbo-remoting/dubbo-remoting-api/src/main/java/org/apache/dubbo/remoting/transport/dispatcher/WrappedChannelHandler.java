@@ -102,6 +102,7 @@ public class WrappedChannelHandler implements ChannelHandlerDelegate {
      * Currently, this method is mainly customized to facilitate the thread model on consumer side.
      * 1. Use ThreadlessExecutor, aka., delegate callback directly to the thread initiating the call.
      * 2. Use shared executor to execute the callback.
+     * 目前，这个方法主要是定制的，以方便消费者方面的线程模型。
      *
      * @param msg
      * @return
@@ -111,6 +112,7 @@ public class WrappedChannelHandler implements ChannelHandlerDelegate {
             Response response = (Response) msg;
             DefaultFuture responseFuture = DefaultFuture.getFuture(response.getId());
             // a typical scenario is the response returned after timeout, the timeout response may has completed the future
+            // 一个典型的场景是超时后返回的响应，超时响应可能已经完成
             if (responseFuture == null) {
                 return getSharedExecutorService();
             } else {

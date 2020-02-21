@@ -119,6 +119,8 @@ public class DubboProtocol extends AbstractProtocol {
             Invocation inv = (Invocation) message;
             Invoker<?> invoker = getInvoker(channel, inv);
             // need to consider backward-compatibility if it's a callback
+            // 如果是回调，则需要考虑向后兼容性
+            // 判断回调方法在导出的服务里有没有对应的回调方法
             if (Boolean.TRUE.toString().equals(inv.getAttachments().get(IS_CALLBACK_SERVICE_INVOKE))) {
                 String methodsStr = invoker.getUrl().getParameters().get("methods");
                 boolean hasMethod = false;
@@ -142,7 +144,11 @@ public class DubboProtocol extends AbstractProtocol {
                 }
             }
             RpcContext.getContext().setRemoteAddress(channel.getRemoteAddress());
+            // 返回对象：
+            // AsyncRpcResult(appResponseFuture, invocation);
+            // CompletableFuture<AppResponse> appResponseFuture
             Result result = invoker.invoke(inv);
+            // 这里实际调用的是 CompletableFuture.thenApply
             return result.thenApply(Function.identity());
         }
 
@@ -236,10 +242,13 @@ public class DubboProtocol extends AbstractProtocol {
     Invoker<?> getInvoker(Channel channel, Invocation inv) throws RemotingException {
         boolean isCallBackServiceInvoke = false;
         boolean isStubServiceInvoke = false;
+        // 得到本地通信端口号
         int port = channel.getLocalAddress().getPort();
+        // 得到服务类名
         String path = (String) inv.getAttachments().get(PATH_KEY);
 
         // if it's callback service on client side
+        // 如果是客户端的回调服务
         isStubServiceInvoke = Boolean.TRUE.toString().equals(inv.getAttachments().get(STUB_EVENT_KEY));
         if (isStubServiceInvoke) {
             port = channel.getRemoteAddress().getPort();
@@ -252,7 +261,10 @@ public class DubboProtocol extends AbstractProtocol {
             inv.getAttachments().put(IS_CALLBACK_SERVICE_INVOKE, Boolean.TRUE.toString());
         }
 
+        // 计算 service key，格式为 groupName/serviceName:serviceVersion:port。比如：
+        // dubbo/com.alibaba.dubbo.demo.DemoService:1.0.0:20880
         String serviceKey = serviceKey(port, path, (String) inv.getAttachments().get(VERSION_KEY), (String) inv.getAttachments().get(GROUP_KEY));
+        // 这里就是根据调用的 端口号 类名 版本号 分组号 在之前服务导出缓存的Map里拿到对应的DubboExporter
         DubboExporter<?> exporter = (DubboExporter<?>) exporterMap.get(serviceKey);
 
         if (exporter == null) {
@@ -260,6 +272,7 @@ public class DubboProtocol extends AbstractProtocol {
                     ", channel: consumer: " + channel.getRemoteAddress() + " --> provider: " + channel.getLocalAddress() + ", message:" + getInvocationWithoutData(inv));
         }
 
+        // 获取DubboExporter里的服务调用程序
         return exporter.getInvoker();
     }
 

@@ -70,6 +70,7 @@ public abstract class AbstractLoadBalance implements LoadBalance {
      * Get the weight of the invoker's invocation which takes warmup time into account
      * if the uptime is within the warmup time, the weight will be reduce proportionally
      *
+     * 获得调用方调用的权重，该权重将考虑预热时间，如果正常运行时间在预热时间内，则该权重将按比例减少
      * @param invoker    the invoker
      * @param invocation the invocation of this invoker
      * @return weight
@@ -83,14 +84,19 @@ public abstract class AbstractLoadBalance implements LoadBalance {
         } else {
             weight = url.getMethodParameter(invocation.getMethodName(), WEIGHT_KEY, DEFAULT_WEIGHT);
             if (weight > 0) {
+                // 获取服务提供者启动时间戳
                 long timestamp = invoker.getUrl().getParameter(TIMESTAMP_KEY, 0L);
                 if (timestamp > 0L) {
+                    // 计算服务提供者运行时长
                     long uptime = System.currentTimeMillis() - timestamp;
                     if (uptime < 0) {
                         return 1;
                     }
+                    // 获取服务预热时间，默认为10分钟
                     int warmup = invoker.getUrl().getParameter(WARMUP_KEY, DEFAULT_WARMUP);
+                    // 如果服务运行时间小于预热时间，则重新计算服务权重，即降权
                     if (uptime > 0 && uptime < warmup) {
+                        // 重新计算服务权重
                         weight = calculateWarmupWeight((int)uptime, warmup, weight);
                     }
                 }

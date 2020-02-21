@@ -130,6 +130,8 @@ public class DefaultFuture extends CompletableFuture<Object> {
     /**
      * close a channel when a channel is inactive
      * directly return the unfinished requests.
+     * 当通道不活动时关闭通道
+     * 直接返回未完成的请求。
      *
      * @param channel channel to close
      */
@@ -156,13 +158,19 @@ public class DefaultFuture extends CompletableFuture<Object> {
 
     public static void received(Channel channel, Response response, boolean timeout) {
         try {
+            // 因为在调用服务端接口发送请求时
+            // 会创建DefaultFuture 并设置请求ID 存入FUTURES里
+            // 这个ID会在处理完请求返回响应的时候继续设置给响应
+            // 然后这里拿着响应的ID找到之前创建的DefaultFuture
             DefaultFuture future = FUTURES.remove(response.getId());
             if (future != null) {
                 Timeout t = future.timeoutCheckTask;
                 if (!timeout) {
                     // decrease Time
+                    // 减少时间
                     t.cancel();
                 }
+                // 把响应结果设置给future
                 future.doReceived(response);
             } else {
                 logger.warn("The timeout response finally returned at "
@@ -195,6 +203,8 @@ public class DefaultFuture extends CompletableFuture<Object> {
         if (res == null) {
             throw new IllegalStateException("response cannot be null");
         }
+        // 处理响应结果
+        // 这里把结果处理complete 实际是使用了CompletableFuture
         if (res.getStatus() == Response.OK) {
             this.complete(res.getResult());
         } else if (res.getStatus() == Response.CLIENT_TIMEOUT || res.getStatus() == Response.SERVER_TIMEOUT) {
@@ -205,6 +215,8 @@ public class DefaultFuture extends CompletableFuture<Object> {
 
         // the result is returning, but the caller thread may still waiting
         // to avoid endless waiting for whatever reason, notify caller thread to return.
+        // 结果正在返回，但调用方线程可能仍在等待
+        // 为了避免无休止的等待，无论什么原因，通知调用线程返回。
         if (executor != null && executor instanceof ThreadlessExecutor) {
             ThreadlessExecutor threadlessExecutor = (ThreadlessExecutor) executor;
             if (threadlessExecutor.isWaiting()) {

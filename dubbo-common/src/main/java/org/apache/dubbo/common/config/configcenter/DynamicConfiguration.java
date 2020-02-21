@@ -190,7 +190,7 @@ public interface DynamicConfiguration extends Configuration, AutoCloseable {
 
     /**
      * Get the instance of {@link DynamicConfiguration} by the specified connection {@link URL}
-     *
+     * 根据 connectionURL 的协议名获取 DynamicConfigurationFactory 动态配置工厂
      * @param connectionURL
      * @return non-null
      * @since 2.7.5

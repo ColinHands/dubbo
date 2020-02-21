@@ -28,6 +28,7 @@ import org.apache.dubbo.remoting.RemotingException;
  */
 public abstract class AbstractPeer implements Endpoint, ChannelHandler {
 
+    // MultiMessageHandler 为
     private final ChannelHandler handler;
 
     private volatile URL url;
@@ -50,6 +51,7 @@ public abstract class AbstractPeer implements Endpoint, ChannelHandler {
 
     @Override
     public void send(Object message) throws RemotingException {
+        // 该方法由 AbstractClient 类实现
         send(message, url.getParameter(Constants.SENT_KEY, false));
     }
 
@@ -103,6 +105,7 @@ public abstract class AbstractPeer implements Endpoint, ChannelHandler {
     /**
      * Return the final handler (which may have been wrapped). This method should be distinguished with getChannelHandler() method
      *
+     * 返回最终的处理程序(可能已经包装)。这个方法应该与getChannelHandler()方法区别开来
      * @return ChannelHandler
      */
     public ChannelHandler getDelegateHandler() {
@@ -144,6 +147,7 @@ public abstract class AbstractPeer implements Endpoint, ChannelHandler {
         if (closed) {
             return;
         }
+        // MultiMessageHandler
         handler.received(ch, msg);
     }
 

@@ -87,6 +87,7 @@ public class HeartbeatHandler extends AbstractChannelHandlerDelegate {
             }
             return;
         }
+        // AllChannelHandler
         handler.received(channel, message);
     }
 

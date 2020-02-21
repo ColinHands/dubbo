@@ -503,20 +503,46 @@ public class DubboBootstrap extends GenericEventListener {
         // 循环FrameworkExt的子类执行initialize()方法
         ApplicationModel.initFrameworkExts();
 
+        // 遍历ConfigCenterConfig
+        // 根据ConfigCenterConfig的url的协议名创建DynamicConfiguration（可以与zookeeper通信的配置类）
+        // 然后用DynamicConfiguration获取到默认的配置与分组配置（分组配置就是指定的dubbo.application.name）
+        // 然后把这些配置加到environment里的ExternalConfigurationMap和AppExternalConfigurationMap
+        // 再把根据ConfigCenterConfig集合转换成的DynamicConfiguration集合放到
+        // CompositeDynamicConfiguration的DynamicConfiguration set对象里
+        // 最后把这个CompositeDynamicConfiguration放到environment的DynamicConfiguration起缓存作用、
+        // 刷新所有配置类
         startConfigCenter();
 
+        // 如果environment已经有了DynamicConfiguration或者ConfigCenterConfig不为空则不做操作，
+        // 否则就根据注册配置类创建配置中心类ConfigCenterConfig
+        // 然后执行startConfigCenter()里的逻辑
         useRegistryAsConfigCenterIfNecessary();
 
+        // 元数据 暂时没有遇到
         startMetadataReport();
-        // Environment 的externalConfigurationMap appExternalConfigurationMap中分别拿到注册配置和协议配置 解析并放如configManager中
+        // Environment 的externalConfigurationMap appExternalConfigurationMap中
+        // 分别拿到注册配置和协议配置 解析并放到configManager中
+        // configManager中获取Environment的ExternalConfigurationMap和AppExternalConfigurationMap（这两个map就是配置中心得到的配置）
+        // 遍历Map过滤包含dubbo.registries.的key
+        // 把key截去dubbo.registries.获得之后的部分
+        // 得到Set<String> registryIds
+        // 然后遍历registryIds创建List<RegistryConfig>并configManager.addRegistries(tmpRegistries)。
+        // 再以相同的方式创建List<ProtocolConfig> 并configManager.addProtocols(tmpProtocols)
+        // 但这次的前缀为dubbo.protocols.
         loadRemoteConfigs();
         // 校验所有的配置
         checkGlobalConfigs();
 
+        // 在ApplicationConfig中获取metadataType
+        // 根据metadataType加载WritableMetadataService SPI拓展
+        // 并赋值给此类的MetadataService变量
         initMetadataService();
 
+        // 根据上一步创建的WritableMetadataService
+        // 创建ConfigurableMetadataServiceExporter并赋值给此类的metadataServiceExporter变量
         initMetadataServiceExporter();
 
+        // 因为此类实现了GenericEventListener 所以把他加入到监听分发器
         initEventListener();
 
         if (logger.isInfoEnabled()) {
@@ -557,6 +583,9 @@ public class DubboBootstrap extends GenericEventListener {
             for (ConfigCenterConfig configCenter : configCenters) {
                 configCenter.refresh();
                 ConfigValidationUtils.validateConfigCenterConfig(configCenter);
+                // 这一步做的事情比较多 先获取动态配置中心的配置设置到environment中，
+                // 然后再把zookeeper类型的动态配置中心加到CompositeDynamicConfiguration的configurations set对象里，
+                // 以方便之后获取动态配置，起到缓存的作用 因为这个动态配置中心是spi拓展
                 compositeDynamicConfiguration.addConfiguration(prepareEnvironment(configCenter));
             }
             environment.setDynamicConfiguration(compositeDynamicConfiguration);
@@ -590,7 +619,8 @@ public class DubboBootstrap extends GenericEventListener {
      * there's no config center specified explicitly.
      */
     private void useRegistryAsConfigCenterIfNecessary() {
-        // we use the loading status of DynamicConfiguration to decide whether ConfigCenter has been initiated.  我们使用DynamicConfiguration的加载状态来决定是否启动了ConfigCenter。
+        // we use the loading status of DynamicConfiguration to decide whether ConfigCenter has been initiated.
+        // 我们使用DynamicConfiguration的加载状态来决定是否启动了ConfigCenter。
         if (environment.getDynamicConfiguration().isPresent()) {
             return;
         }
@@ -815,11 +845,15 @@ public class DubboBootstrap extends GenericEventListener {
             if (!configCenter.checkOrUpdateInited()) {
                 return null;
             }
+            // 根据ConfigCenterConfig中的url中的协议名获取动态配置工厂
+            // 然后zookeeper 默认zookeeper上的路径为dubbo.properties 分组为dubbo
             DynamicConfiguration dynamicConfiguration = getDynamicConfiguration(configCenter.toUrl());
             String configContent = dynamicConfiguration.getProperties(configCenter.getConfigFile(), configCenter.getGroup());
 
+            // 这里的appGroup就是配置文件中配置的dubbo.application.name的值
             String appGroup = getApplication().getName();
             String appConfigContent = null;
+            // 下面的用意是根据dubbo.application.name的值再从zookeeper的动态配置中心再获取一次动态配置
             if (isNotEmpty(appGroup)) {
                 appConfigContent = dynamicConfiguration.getProperties
                         (isNotEmpty(configCenter.getAppConfigFile()) ? configCenter.getAppConfigFile() : configCenter.getConfigFile(),
@@ -827,8 +861,11 @@ public class DubboBootstrap extends GenericEventListener {
                         );
             }
             try {
+                // 设置动态中心配置是不是最优先级别
                 environment.setConfigCenterFirst(configCenter.isHighestPriority());
+                // 把获取到的动态配置字符串转成 Properties 并且更新到environment的externalConfigurationMap里
                 environment.updateExternalConfigurationMap(parseProperties(configContent));
+                // 把获取到的动态配置字符串转成 Properties 并且更新到environment的appExternalConfigurationMap里
                 environment.updateAppExternalConfigurationMap(parseProperties(appConfigContent));
             } catch (IOException e) {
                 throw new IllegalStateException("Failed to parse configurations from Config Center.", e);

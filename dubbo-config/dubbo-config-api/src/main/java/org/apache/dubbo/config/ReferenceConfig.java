@@ -194,22 +194,49 @@ public class ReferenceConfig<T> extends ReferenceConfigBase<T> {
             bootstrap.init();
         }
 
+        // 1、如果consumerConfig不为空的话并且registries为空则设置consumerConfig的registries
+        // 2、如果registryIds为空的话就设置consumerConfig的registryIds
+        // 3、如果consumer为空 则去配置管理拿consumer ConfigManager的configsCache里获取默认的ConsumerConfig，如果没有获取到就新建一个并刷新
+        // 4、如果generic为空则设置为consumer的generic
+        // 5、检查配置文件中配置的方法是否包含在远程服务接口中
+        // 6、把version、group、interfaceName等一些信息设置到serviceMetadata里
+        // 7、在ServiceRepository里注册interfaceClass的信息
+        // 8、在全局获取url地址（点对点调用的url）
+        // 9、做前置配置校验（校验是否有需要的拓展类其中包括InvokerListener）
+        // 10、给予调用者修改ReferenceConfig配置的地方
         checkAndUpdateSubConfigs();
 
         // 合法性检查存根
+        // 1、如果stub的名称是true或者default，则存根的名称为interfaceClass.getName() + "Stub"
+        // 2、然后实例化这个存根类
+        // 3、判断这个存根类是否是interfaceClass的子类
         checkStubAndLocal(interfaceClass);
+        // 检查模拟数据合法性mock1、标准化mock的值
+        // 做兼容操作return => return null fail => default force => default fail:throw/return foo => throw/return foo force:throw/return foo => throw/return foo2、
+        // 1、如果是以return开头 调用parseMockValue(String mock, Type[] returnTypes)方法 ，这里调用的时候第二个参数传的是null empty=>null后者returnTypes的实例化对象
+        // "null" => null "true" => true "false" => false  “”或者‘’ => 取双引号或者单引号中间的值
+        // returnTypes为String => 直接返回mock字符串
+        // StringUtils.isNumeric(mock, false)=> JSON化
+        // {或者[开头=> JSON化
+        // 最后如果returnTypes不为空则根据value格式化returnTypes类型的对象value = PojoUtils.realize(value, (Class<?>) returnTypes[0], returnTypes.length > 1 ? returnTypes[1] : null);
+        // 2、如果以throw开头 主要是在THROWABLE_MAP异常Map里查找是否有对应的类 如果没有则在最大异常类数量限制下去创建并加入到Map里
+        // 3、如果mock等于true或者default则mock等于serviceType.getName() + "Mock" 实例化mock类 并且判断是否是serviceType的子类
+        // 1 2 3 是三个if分支
         ConfigValidationUtils.checkMock(interfaceClass, this);
 
         Map<String, String> map = new HashMap<String, String>();
         map.put(SIDE_KEY, CONSUMER_SIDE);
 
+        // 把release、timestamp、pid、dubbo的值放入map
         ReferenceConfigBase.appendRuntimeParameters(map);
+        // 不是泛化调用则增加revision到map里
         if (!ProtocolUtils.isGeneric(generic)) {
             String revision = Version.getVersion(interfaceClass, version);
             if (revision != null && revision.length() > 0) {
                 map.put(REVISION_KEY, revision);
             }
 
+            // 获得interfaceClass的所有非Object方法并以逗号拼接放入map
             String[] methods = Wrapper.getWrapper(interfaceClass).getMethodNames();
             if (methods.length == 0) {
                 logger.warn("No method found in service interface " + interfaceClass.getName());
@@ -262,7 +289,7 @@ public class ReferenceConfig<T> extends ReferenceConfigBase<T> {
         ref = createProxy(map);
 
         serviceMetadata.setTarget(ref);
-        serviceMetadata.addAttribute(PROXY_CLASS_REF, ref);
+        serviceMetadata.addAttribute(PROXY_CLASS_REF, ref);// repository里有services（服务类的详细信息）consumers providers 是不是起全局缓存作用
         ConsumerModel consumerModel = repository.lookupReferredService(serviceMetadata.getServiceKey());
         consumerModel.setProxyObject(ref);
         consumerModel.init(attributes);
@@ -276,6 +303,11 @@ public class ReferenceConfig<T> extends ReferenceConfigBase<T> {
     @SuppressWarnings({"unchecked", "rawtypes", "deprecation"})
     private T createProxy(Map<String, String> map) {
         if (shouldJvmRefer(map)) {
+            // 判断条件
+            // 1、scope是local则是
+            // 2、injvm设置为true则是
+            // 3、generic为true则不是
+            // 4、在InjvmProtocol里的exporterMap查找是不是有对应的导出Exporter 如果有的话就是本地引用
             URL url = new URL(LOCAL_PROTOCOL, LOCALHOST_VALUE, 0, interfaceClass.getName()).addParameters(map);
             invoker = REF_PROTOCOL.refer(interfaceClass, url);
             if (logger.isInfoEnabled()) {
@@ -312,8 +344,13 @@ public class ReferenceConfig<T> extends ReferenceConfigBase<T> {
                 // 从注册中心的配置中组装URL
                 if (!LOCAL_PROTOCOL.equalsIgnoreCase(getProtocol())) {
                     // 加载并验证注册中心配置类
+                    // 1、验证registryIds是否为空，如果为空则获取ApplicationConfig的registryIds 并设置之
+                    // 2、registryIds为空并且registries也为空 则通过ApplicationModel.getConfigManager().getDefaultRegistries()获取List<RegistryConfig> 如果还是为空则新建RegistryConfig并刷新之
+                    // 3、如果之前if分支registryIds 不为空的话 则以逗号分隔字符传并遍历id 首先根据id在配置管理里查找ApplicationModel.getConfigManager().getRegistry(id)如果存在则加入集合中
+                    // 否则根据id创建RegistryConfig并刷新之 遍历registries 验证可用性（address是否为空）
                     checkRegistry();
                     // 获得注册中心地址Url集合
+                    // registry://127.0.0.1:2181/org.apache.dubbo.registry.RegistryService?application=dubbo-demo-annotation-consumer&dubbo=2.0.2&pid=13590&registry=zookeeper&timestamp=1582213962729
                     List<URL> us = ConfigValidationUtils.loadRegistries(this, false);
                     if (CollectionUtils.isNotEmpty(us)) {
                         for (URL u : us) {
@@ -322,6 +359,8 @@ public class ReferenceConfig<T> extends ReferenceConfigBase<T> {
                             if (monitorUrl != null) {
                                 map.put(MONITOR_KEY, URL.encode(monitorUrl.toFullString()));
                             }
+                            // 协议为register 引用相关信息在parameters里
+                            // registry://127.0.0.1:2181/org.apache.dubbo.registry.RegistryService?application=dubbo-demo-annotation-consumer&dubbo=2.0.2&pid=13590&refer=application%3Ddubbo-demo-annotation-consumer%26dubbo%3D2.0.2%26init%3Dfalse%26interface%3Dorg.apache.dubbo.demo.DemoService%26methods%3DsayHello%2CsayHelloAsync%26pid%3D13590%26register.ip%3D192.168.125.101%26side%3Dconsumer%26sticky%3Dfalse%26timestamp%3D1582183103354&registry=zookeeper&timestamp=1582213962729
                             urls.add(u.addParameterAndEncoded(REFER_KEY, StringUtils.toQueryString(map)));
                         }
                     }
@@ -380,9 +419,13 @@ public class ReferenceConfig<T> extends ReferenceConfigBase<T> {
         /**
          * @since 2.7.0
          * ServiceData Store
+         * InMemoryWritableMetadataService实现类  解析引用的类
+         * 得到类的详细的信息
+         * {"canonicalName":"org.apache.dubbo.demo.DemoService","codeSource":"file:/Users/pussycat/Downloads/demo/dubbo/dubbo-demo/dubbo-demo-interface/target/classes/","methods":[{"name":"sayHello","parameterTypes":["java.lang.String"],"returnType":"java.lang.String"},{"name":"sayHelloAsync","parameterTypes":["java.lang.String"],"returnType":"java.util.concurrent.CompletableFuture"}],"types":[{"type":"char","typeBuilderName":"org.apache.dubbo.metadata.definition.builder.DefaultTypeBuilder"},{"type":"int","typeBuilderName":"org.apache.dubbo.metadata.definition.builder.DefaultTypeBuilder"},{"type":"java.util.concurrent.CompletableFuture","properties":{"result":{"type":"java.lang.Object","typeBuilderName":"org.apache.dubbo.metadata.definition.builder.DefaultTypeBuilder"},"stack":{"type":"java.util.concurrent.CompletableFuture$Completion","properties":{"next":{"type":"java.util.concurrent.CompletableFuture$Completion","$ref":"java.util.concurrent.CompletableFuture$Completion","typeBuilderName":"org.apache.dubbo.metadata.definition.builder.DefaultTypeBuilder"},"status":{"type":"int","typeBuilderName":"org.apache.dubbo.metadata.definition.builder.DefaultTypeBuilder"}},"typeBuilderName":"org.apache.dubbo.metadata.definition.builder.DefaultTypeBuilder"}},"typeBuilderName":"org.apache.dubbo.metadata.definition.builder.DefaultTypeBuilder"},{"type":"java.lang.Object","typeBuilderName":"org.apache.dubbo.metadata.definition.builder.DefaultTypeBuilder"},{"type":"java.util.concurrent.CompletableFuture$Completion","properties":{"next":{"type":"java.util.concurrent.CompletableFuture$Completion","$ref":"java.util.concurrent.CompletableFuture$Completion","typeBuilderName":"org.apache.dubbo.metadata.definition.builder.DefaultTypeBuilder"},"status":{"type":"int","typeBuilderName":"org.apache.dubbo.metadata.definition.builder.DefaultTypeBuilder"}},"typeBuilderName":"org.apache.dubbo.metadata.definition.builder.DefaultTypeBuilder"},{"type":"java.lang.String","typeBuilderName":"org.apache.dubbo.metadata.definition.builder.DefaultTypeBuilder"}]}
          */
         String metadata = map.get(METADATA_KEY);
         WritableMetadataService metadataService = WritableMetadataService.getExtension(metadata == null ? DEFAULT_METADATA_STORAGE_TYPE : metadata);
+        // consumer://192.168.125.101/org.apache.dubbo.demo.DemoService?application=dubbo-demo-annotation-consumer&dubbo=2.0.2&init=false&interface=org.apache.dubbo.demo.DemoService&methods=sayHello,sayHelloAsync&pid=13590&release=&side=consumer&sticky=false&timestamp=1582183103354
         if (metadataService != null) {
             URL consumerURL = new URL(CONSUMER_PROTOCOL, map.remove(REGISTER_IP_KEY), 0, map.get(INTERFACE_KEY), map);
             metadataService.publishServiceDefinition(consumerURL);
@@ -402,6 +445,8 @@ public class ReferenceConfig<T> extends ReferenceConfigBase<T> {
         if (StringUtils.isEmpty(interfaceName)) {
             throw new IllegalStateException("<dubbo:reference interface=\"\" /> interface not allow null!");
         }
+        // 这个方法这要就是设置List<RegistryConfig>（没有就设置有的话不做操作） 获取RegistryConfig集合的顺序为
+        // 特定配置类 -> module配置类 -> application配置类
         completeCompoundConfigs(consumer);
         if (consumer != null) {
             if (StringUtils.isEmpty(registryIds)) {
@@ -410,6 +455,8 @@ public class ReferenceConfig<T> extends ReferenceConfigBase<T> {
         }
         // get consumer's global configuration
         // 如果consumer为空 则去配置管理拿consumer
+        // ConfigManager的configsCache里获取默认的ConsumerConfig，
+        // 如果没有获取到就新建一个并刷新
         checkDefault();
         this.refresh();
         if (getGeneric() == null && getConsumer() != null) {
@@ -424,6 +471,7 @@ public class ReferenceConfig<T> extends ReferenceConfigBase<T> {
             } catch (ClassNotFoundException e) {
                 throw new IllegalStateException(e.getMessage(), e);
             }
+            // 主要检查配置文件中配置的方法是否包含在远程服务接口中
             checkInterfaceAndMethods(interfaceClass, getMethods());
         }
 
@@ -472,6 +520,11 @@ public class ReferenceConfig<T> extends ReferenceConfigBase<T> {
             if (url != null && url.length() > 0) {
                 isJvmRefer = false;
             } else {
+                // 判断条件
+                // 1、scope是local则是
+                // 2、injvm设置为true则是
+                // 3、generic为true则不是
+                // 4、在InjvmProtocol里的exporterMap查找是不是有对应的导出Exporter 如果有的话就是本地引用
                 // by default, reference local service if there is
                 isJvmRefer = InjvmProtocol.getInjvmProtocol().isInjvmRefer(tmpUrl);
             }

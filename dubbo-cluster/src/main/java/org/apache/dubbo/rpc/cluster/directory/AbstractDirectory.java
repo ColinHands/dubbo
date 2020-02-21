@@ -38,16 +38,19 @@ import static org.apache.dubbo.rpc.cluster.Constants.REFER_KEY;
 /**
  * Abstract implementation of Directory: Invoker list returned from this Directory's list method have been filtered by Routers
  *
+ * 目录的抽象实现:调用者列表从这个目录的列表方法返回已被路由器过滤
  */
 public abstract class AbstractDirectory<T> implements Directory<T> {
 
     // logger
     private static final Logger logger = LoggerFactory.getLogger(AbstractDirectory.class);
 
+    // 注册中心 URL   zookeeper://127.0.0.1:2181/org.apache.dubbo.registry.RegistryService?application=dubbo-demo-annotation-consumer&dubbo=2.0.2&pid=13590&refer=application%3Ddubbo-demo-annotation-consumer%26dubbo%3D2.0.2%26init%3Dfalse%26interface%3Dorg.apache.dubbo.demo.DemoService%26methods%3DsayHello%2CsayHelloAsync%26pid%3D13590%26register.ip%3D192.168.125.101%26side%3Dconsumer%26sticky%3Dfalse%26timestamp%3D1582183103354&timestamp=1582213962729
     private final URL url;
 
     private volatile boolean destroyed = false;
 
+    // 消费者 URL 初始值与 url 一样 是实例话动态目录时传递进来的  zookeeper://127.0.0.1:2181/org.apache.dubbo.registry.RegistryService?application=dubbo-demo-annotation-consumer&dubbo=2.0.2&pid=13590&refer=application%3Ddubbo-demo-annotation-consumer%26dubbo%3D2.0.2%26init%3Dfalse%26interface%3Dorg.apache.dubbo.demo.DemoService%26methods%3DsayHello%2CsayHelloAsync%26pid%3D13590%26register.ip%3D192.168.125.101%26side%3Dconsumer%26sticky%3Dfalse%26timestamp%3D1582183103354&timestamp=1582213962729
     private volatile URL consumerUrl;
 
     protected RouterChain<T> routerChain;

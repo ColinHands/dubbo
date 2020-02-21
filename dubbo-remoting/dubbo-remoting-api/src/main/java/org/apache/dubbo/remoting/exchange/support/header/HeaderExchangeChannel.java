@@ -53,6 +53,7 @@ final class HeaderExchangeChannel implements ExchangeChannel {
         if (channel == null) {
             throw new IllegalArgumentException("channel == null");
         }
+        // 这里的 channel 指向的是 NettyClient
         this.channel = channel;
     }
 
@@ -126,12 +127,17 @@ final class HeaderExchangeChannel implements ExchangeChannel {
             throw new RemotingException(this.getLocalAddress(), null, "Failed to send request " + request + ", cause: The channel " + this + " is closed!");
         }
         // create request.
+        // 创建request 并委托给channel发送请求
+        // 创建DefaultFuture 把当前的channel传入 然后再把这个对象返回
+        // 这样客户端可以异步的接收相应 又可以用channel做些想做的事
+        // 这里把用请求新建一个DefaultFuture并返回
         Request req = new Request();
         req.setVersion(Version.getProtocolVersion());
         req.setTwoWay(true);
         req.setData(request);
         DefaultFuture future = DefaultFuture.newFuture(channel, req, timeout, executor);
         try {
+            // 调用 NettyClient 的 send 方法发送请求
             channel.send(req);
         } catch (RemotingException e) {
             future.cancel();
@@ -149,6 +155,7 @@ final class HeaderExchangeChannel implements ExchangeChannel {
     public void close() {
         try {
             // graceful close
+            // 这里主要是 当通道不活动时关闭通道 直接返回未完成的请求。
             DefaultFuture.closeChannel(channel);
             channel.close();
         } catch (Throwable e) {
@@ -157,6 +164,7 @@ final class HeaderExchangeChannel implements ExchangeChannel {
     }
 
     // graceful close
+    // 优雅的关闭
     @Override
     public void close(int timeout) {
         if (closed) {

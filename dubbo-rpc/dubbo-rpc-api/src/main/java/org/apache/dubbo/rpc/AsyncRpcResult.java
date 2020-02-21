@@ -33,6 +33,8 @@ import java.util.function.Function;
  * This class represents an unfinished RPC call, it will hold some context information for this call, for example RpcContext and Invocation,
  * so that when the call finishes and the result returns, it can guarantee all the contexts being recovered as the same as when the call was made
  * before any callback is invoked.
+ * 这个类表示一个未完成的RPC调用，它将保存这个调用的一些上下文信息，例如RpcContext和调用，
+ * 因此，当调用结束并返回结果时，它可以保证恢复的所有上下文与在调用任何回调之前进行的调用相同。
  * <p>
  * TODO if it's reasonable or even right to keep a reference to Invocation?
  * <p>
@@ -42,6 +44,8 @@ import java.util.function.Function;
  * AsyncRpcResult does not contain any concrete value (except the underlying value bring by CompletableFuture), consider it as a status transfer node.
  * {@link #getValue()} and {@link #getException()} are all inherited from {@link Result} interface, implementing them are mainly
  * for compatibility consideration. Because many legacy {@link Filter} implementation are most possibly to call getValue directly.
+ * AsyncRpcResult不包含任何具体的值(除了CompletableFuture带来的底层值)，可以将它视为一个状态转移节点。
+ * {@link #getValue()}和{@link #getException()}都继承自{@link Result}接口，实现它们主要是为了考虑兼容性。因为许多遗留的{@link Filter}实现最有可能直接调用getValue。
  */
 public class AsyncRpcResult implements Result {
     private static final Logger logger = LoggerFactory.getLogger(AsyncRpcResult.class);
@@ -49,6 +53,8 @@ public class AsyncRpcResult implements Result {
     /**
      * RpcContext may already have been changed when callback happens, it happens when the same thread is used to execute another RPC call.
      * So we should keep the reference of current RpcContext instance and restore it before callback being executed.
+     * 当回调发生时，RpcContext可能已经被更改，当同一个线程被用来执行另一个RPC调用时，它就会发生。
+     * 因此，我们应该保留当前RpcContext实例的引用，并在执行回调之前恢复它。
      */
     private RpcContext storedContext;
     private RpcContext storedServerContext;
@@ -67,6 +73,7 @@ public class AsyncRpcResult implements Result {
 
     /**
      * Notice the return type of {@link #getValue} is the actual type of the RPC method, not {@link AppResponse}
+     * 注意，{@link #getValue}的返回类型是RPC方法的实际类型，而不是{@link AppResponse}
      *
      * @return
      */
@@ -79,9 +86,13 @@ public class AsyncRpcResult implements Result {
      * CompletableFuture can only be completed once, so try to update the result of one completed CompletableFuture will
      * has no effect. To avoid this problem, we check the complete status of this future before update it's value.
      *
+     * CompletableFuture只能完成一次，所以尝试更新一个完成的CompletableFuture将没有效果。为了避免这个问题，我们在更新它的值之前检查这个future的完整状态。
+     *
      * But notice that trying to give an uncompleted CompletableFuture a new specified value may face a race condition,
      * because the background thread watching the real result will also change the status of this CompletableFuture.
      * The result is you may lose the value you expected to set.
+     * 但是请注意，尝试给一个未完成的CompletableFuture一个新的指定值可能会面临一个竞争条件，因为观察实际结果的后台线程也会改变这个CompletableFuture的状态。
+     * 结果是您可能会丢失预期设置的值。
      *
      * @param value
      */
@@ -152,6 +163,9 @@ public class AsyncRpcResult implements Result {
      * 1. if value returns before timeout, return normally.
      * 2. if no value returns after timeout, throw TimeoutException.
      *
+     * 这个方法总是在最大的“超时”等待后返回:
+     * 如果值在超时之前返回，则正常返回。
+     * 如果超时后没有返回值，则抛出TimeoutException。
      * @return
      * @throws InterruptedException
      * @throws ExecutionException
@@ -177,10 +191,12 @@ public class AsyncRpcResult implements Result {
     @Override
     public Object recreate() throws Throwable {
         RpcInvocation rpcInvocation = (RpcInvocation) invocation;
+        // 如果异步有返回结果的调用
         if (InvokeMode.FUTURE == rpcInvocation.getInvokeMode()) {
             return RpcContext.getContext().getFuture();
         }
 
+        // 如果是同步调用
         return getAppResponse().recreate();
     }
 
@@ -238,6 +254,7 @@ public class AsyncRpcResult implements Result {
 
     /**
      * tmp context to use when the thread switch to Dubbo thread.
+     * 当线程切换到Dubbo线程时使用的tmp上下文。
      */
     private RpcContext tmpContext;
     private RpcContext tmpServerContext;

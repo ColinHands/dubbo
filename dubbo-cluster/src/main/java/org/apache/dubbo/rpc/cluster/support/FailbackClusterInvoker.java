@@ -97,7 +97,15 @@ public class FailbackClusterInvoker<T> extends AbstractClusterInvoker<T> {
         Invoker<T> invoker = null;
         try {
             checkInvokers(invokers, invocation);
+            // 这里举例一个复杂的例子
+            // 前面例举的调用程序集合 里的每一项是经过分组过的静态目录
+            // 这里去根据负载均衡器选择一个静态目录
             invoker = select(loadbalance, invocation, invokers, null);
+            // 这里实际调用的是静态目录 AbstractClusterInvoker 的子类
+            // AbstractClusterInvoker 的成员变量里有这个静态目录
+            // 调用的时候继续循环 例举调用程序 例举的时候会执行路由 路由调用程序
+            //（如果是分组调用）则不会执行路由规则
+            // 然后再负载均衡选择
             return invoker.invoke(invocation);
         } catch (Throwable e) {
             logger.error("Failback to invoke method " + invocation.getMethodName() + ", wait for retry in background. Ignored exception: "

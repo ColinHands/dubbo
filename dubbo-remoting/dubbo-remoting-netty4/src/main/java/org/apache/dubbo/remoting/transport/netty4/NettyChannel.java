@@ -38,12 +38,14 @@ import static org.apache.dubbo.common.constants.CommonConstants.TIMEOUT_KEY;
 
 /**
  * NettyChannel maintains the cache of channel.
+ * NettyChannel维护通道的缓存。
  */
 final class NettyChannel extends AbstractChannel {
 
     private static final Logger logger = LoggerFactory.getLogger(NettyChannel.class);
     /**
      * the cache for netty channel and dubbo channel
+     * netty通道和dubbo通道的缓存
      */
     private static final ConcurrentMap<Channel, NettyChannel> CHANNEL_MAP = new ConcurrentHashMap<Channel, NettyChannel>();
     /**
@@ -59,6 +61,7 @@ final class NettyChannel extends AbstractChannel {
      * The constructor of NettyChannel.
      * It is private so NettyChannel usually create by {@link NettyChannel#getOrAddChannel(Channel, URL, ChannelHandler)}
      *
+     * NettyChannel的构造函数。
      * @param channel netty channel
      * @param url
      * @param handler dubbo handler that contain netty handler
@@ -75,6 +78,8 @@ final class NettyChannel extends AbstractChannel {
      * Get dubbo channel by netty channel through channel cache.
      * Put netty channel into it if dubbo channel don't exist in the cache.
      *
+     * 通过通道缓存从netty通道获取dubbo通道。
+     * 如果dubbo通道在缓存中不存在，请将netty通道放入其中。
      * @param ch      netty channel
      * @param url
      * @param handler dubbo handler that contain netty's handler
@@ -160,9 +165,14 @@ final class NettyChannel extends AbstractChannel {
         int timeout = 0;
         try {
             ChannelFuture future = channel.writeAndFlush(message);
+            // sent 的值源于 <dubbo:method sent="true/false" /> 中 sent 的配置值，有两种配置值：
+            //   1. true: 等待消息发出，消息发送失败将抛出异常
+            //   2. false: 不等待消息发出，将消息放入 IO 队列，即刻返回
+            // 默认情况下 sent = false；
             if (sent) {
                 // wait timeout ms
                 timeout = getUrl().getPositiveParameter(TIMEOUT_KEY, DEFAULT_TIMEOUT);
+                // 等待消息发出，若在规定时间没能发出，success 会被置为 false
                 success = future.await(timeout);
             }
             Throwable cause = future.cause();

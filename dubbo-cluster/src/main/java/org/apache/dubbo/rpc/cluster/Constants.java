@@ -60,6 +60,7 @@ public interface Constants {
 
     /**
      * When this attribute appears in invocation's attachment, mock invoker will be used
+     * 当此属性出现在调用的附件中时，将使用模拟调用程序
      */
     String INVOCATION_NEED_MOCK = "invocation.need.mock";
 

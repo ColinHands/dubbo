@@ -109,6 +109,7 @@ final public class MockInvoker<T> implements Invoker<T> {
         if (StringUtils.isBlank(mock)) {
             throw new RpcException(new IllegalAccessException("mock can not be null. url :" + url));
         }
+        // 规范化mock返回
         mock = normalizeMock(URL.decode(mock));
         if (mock.startsWith(RETURN_PREFIX)) {
             mock = mock.substring(RETURN_PREFIX.length()).trim();
@@ -139,11 +140,13 @@ final public class MockInvoker<T> implements Invoker<T> {
     }
 
     public static Throwable getThrowable(String throwstr) {
+        // 从缓存中获取异常
         Throwable throwable = THROWABLE_MAP.get(throwstr);
         if (throwable != null) {
             return throwable;
         }
 
+        // 没有从缓存中获取到 则在不超过最大限制的情况下创建模拟类 并缓存
         try {
             Throwable t;
             Class<?> bizException = ReflectUtils.forName(throwstr);
@@ -167,8 +170,11 @@ final public class MockInvoker<T> implements Invoker<T> {
         }
 
         Class<T> serviceType = (Class<T>) ReflectUtils.forName(url.getServiceInterface());
+        // class for name 实例话模拟类 而且模拟类必须是serviceType的实现类
         T mockObject = (T) getMockObject(mockService, serviceType);
+        // 创建模拟服务的代理类
         invoker = PROXY_FACTORY.getInvoker(mockObject, serviceType, url);
+        // 缓存模拟类
         if (MOCK_MAP.size() < 10000) {
             MOCK_MAP.put(mockService, invoker);
         }

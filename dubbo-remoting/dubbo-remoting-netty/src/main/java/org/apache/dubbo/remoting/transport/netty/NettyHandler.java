@@ -46,8 +46,14 @@ public class NettyHandler extends SimpleChannelHandler {
 
     private final URL url;
 
+    // 这里所有的handler操作 AbstractPeer 来执行
     private final ChannelHandler handler;
 
+    /**
+     * 这里是客户端服务端接收到请求或者相应的总处理入口
+     * @param url
+     * @param handler
+     */
     public NettyHandler(URL url, ChannelHandler handler) {
         if (url == null) {
             throw new IllegalArgumentException("url == null");
@@ -56,6 +62,8 @@ public class NettyHandler extends SimpleChannelHandler {
             throw new IllegalArgumentException("handler == null");
         }
         this.url = url;
+        // 这里的 handler 类型为 NettyServer后者NettyClient
+        // 因为NettyHandler对象实在打开服务器端后者客户端时创建的
         this.handler = handler;
     }
 
@@ -97,8 +105,11 @@ public class NettyHandler extends SimpleChannelHandler {
 
     @Override
     public void messageReceived(ChannelHandlerContext ctx, MessageEvent e) throws Exception {
+        // 获取 NettyChannel 这个channel很重要 会一直传递 用来发送执行结果给客户端
+        // NettyChannel 会创建缓存在NettyChannel CHANNEL_MAP里 实际的发送数据的操作也是交给org.jboss.netty.channel执行的
         NettyChannel channel = NettyChannel.getOrAddChannel(ctx.getChannel(), url, handler);
         try {
+            // 继续向下调用 线程派发模型 AbstractPeer
             handler.received(channel, e.getMessage());
         } finally {
             NettyChannel.removeChannelIfDisconnected(ctx.getChannel());

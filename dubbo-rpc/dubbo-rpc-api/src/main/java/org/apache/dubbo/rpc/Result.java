@@ -71,6 +71,7 @@ public interface Result extends Serializable {
 
     /**
      * Recreate.
+     * 重新创建
      * <p>
      * <code>
      * if (hasException()) {
@@ -128,6 +129,8 @@ public interface Result extends Serializable {
      * Just as the method name implies, this method will guarantee the callback being triggered under the same context as when the call was started,
      * see implementation in {@link Result#whenCompleteWithContext(BiConsumer)}
      *
+     * 添加一个回调，它可以在RPC调用结束时触发。
+     * 正如方法名称所暗示的，这个方法将保证在调用开始时的相同上下文中触发回调，参见{@link Result#when completewithcontext (BiConsumer)}中的实现。
      * @param fn
      * @return
      */

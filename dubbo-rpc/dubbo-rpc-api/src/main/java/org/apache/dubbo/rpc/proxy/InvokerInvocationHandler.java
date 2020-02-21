@@ -57,6 +57,10 @@ public class InvokerInvocationHandler implements InvocationHandler {
         RpcInvocation rpcInvocation = new RpcInvocation(method, invoker.getInterface().getName(), args);
         rpcInvocation.setTargetServiceUniqueName(invoker.getUrl().getServiceKey());
 
+        // invoker 成员变量类型为 MockClusterInvoker，MockClusterInvoker 内部封装了服务降级逻辑
+        // 这里返回的是CompletableFuture<AppResponse>
+        // AsyncRpcResult result = new AsyncRpcResult(appResponseFuture, inv);
+        // result.setExecutor(executor);
         return invoker.invoke(rpcInvocation).recreate();
     }
 }

@@ -105,13 +105,14 @@ public abstract class AbstractRegistryFactory implements RegistryFactory {
         }
 
         // 这里的url已经在前面替换过一次protocol了
-        // url为：
+        // url为：zookeeper://127.0.0.1:2181/org.apache.dubbo.registry.RegistryService?application=dubbo-demo-annotation-consumer&dubbo=2.0.2&interface=org.apache.dubbo.registry.RegistryService&pid=13590&timestamp=1582213962729
         // 移除掉export和refer属性
         url = URLBuilder.from(url)
                 .setPath(RegistryService.class.getName())
                 .addParameter(INTERFACE_KEY, RegistryService.class.getName())
                 .removeParameters(EXPORT_KEY, REFER_KEY)
                 .build();
+        // zookeeper://127.0.0.1:2181/org.apache.dubbo.registry.RegistryService
         String key = url.toServiceStringWithoutResolving();
         // Lock the registry access process to ensure a single instance of the registry
         LOCK.lock();

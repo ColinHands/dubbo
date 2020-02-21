@@ -43,6 +43,7 @@ final class ReferenceCountExchangeClient implements ExchangeClient {
     private final URL url;
     private final AtomicInteger referenceCount = new AtomicInteger(0);
 
+    // HeaderExchangeClient
     private ExchangeClient client;
 
     public ReferenceCountExchangeClient(ExchangeClient client) {
@@ -176,11 +177,13 @@ final class ReferenceCountExchangeClient implements ExchangeClient {
     /**
      * when closing the client, the client needs to be set to LazyConnectExchangeClient, and if a new call is made,
      * the client will "resurrect".
+     * 当关闭客户端时，需要将客户端设置为LazyConnectExchangeClient，如果进行了新调用，客户将“复活”。
      *
      * @return
      */
     private void replaceWithLazyClient() {
         // this is a defensive operation to avoid client is closed by accident, the initial state of the client is false
+        // 这是一种防御操作，以避免客户端意外关闭，客户端初始状态为false
         URL lazyUrl = URLBuilder.from(url)
                 .addParameter(LAZY_CONNECT_INITIAL_STATE_KEY, Boolean.FALSE)
                 .addParameter(RECONNECT_KEY, Boolean.FALSE)
@@ -192,6 +195,7 @@ final class ReferenceCountExchangeClient implements ExchangeClient {
 
         /**
          * the order of judgment in the if statement cannot be changed.
+         * if语句中的判断顺序不能改变。
          */
         if (!(client instanceof LazyConnectExchangeClient) || client.isClosed()) {
             client = new LazyConnectExchangeClient(lazyUrl, client.getExchangeHandler());
@@ -205,6 +209,8 @@ final class ReferenceCountExchangeClient implements ExchangeClient {
 
     /**
      * The reference count of current ExchangeClient, connection will be closed if all invokers destroyed.
+     * ExchangeClient的参考计数，如果所有的访问器都被破坏，连接将被关闭。
+     * 引用计数自增，该方法由外部调用
      */
     public void incrementAndGetCount() {
         referenceCount.incrementAndGet();

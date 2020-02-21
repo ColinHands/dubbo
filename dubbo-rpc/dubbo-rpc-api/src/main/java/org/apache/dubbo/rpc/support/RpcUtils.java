@@ -92,7 +92,8 @@ public class RpcUtils {
 
     /**
      * Idempotent operation: invocation id will be added in async operation by default
-     *
+     * 幂等操作:默认情况下，调用id将在异步操作中添加
+     * 先判断是不是异步调用 再判断有没有设置id 如果没有设置才设置id
      * @param url
      * @param inv
      */
@@ -102,6 +103,12 @@ public class RpcUtils {
         }
     }
 
+    /**
+     * 判断是否是异步调用
+     * @param url
+     * @param invocation
+     * @return
+     */
     private static boolean isAttachInvocationId(URL url, Invocation invocation) {
         String value = url.getMethodParameter(invocation.getMethodName(), AUTO_ATTACH_INVOCATIONID_KEY);
         if (value == null) {
@@ -185,9 +192,11 @@ public class RpcUtils {
     }
 
     public static InvokeMode getInvokeMode(URL url, Invocation inv) {
+        // 如果Invocation的返回值是CompletableFuture类型
         if (isReturnTypeFuture(inv)) {
             return InvokeMode.FUTURE;
         } else if (isAsync(url, inv)) {
+            // 异步调用 两种方式拿到 一种是在Invocation的getAttachment 一种是在url参数上
             return InvokeMode.ASYNC;
         } else {
             return InvokeMode.SYNC;
