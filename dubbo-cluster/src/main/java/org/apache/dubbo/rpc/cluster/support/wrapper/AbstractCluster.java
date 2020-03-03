@@ -55,6 +55,11 @@ public abstract class AbstractCluster implements Cluster {
         return last;
     }
 
+    // 服务引用refer 首先调用doJoin(directory)创建AbstractClusterInvoker子类
+    // join(Directory<T> directory)由AbstractCluster子类实现
+    // 然后再调用buildClusterInterceptors(AbstractClusterInvoker<T> clusterInvoker, String key)
+    // 给doJoin(directory)创建出来的AbstractClusterInvoker的子类（例如FailoverClusterInvoker）
+    // 构建拦截器链
     @Override
     public <T> Invoker<T> join(Directory<T> directory) throws RpcException {
         return buildClusterInterceptors(doJoin(directory), directory.getUrl().getParameter(REFERENCE_INTERCEPTOR_KEY));

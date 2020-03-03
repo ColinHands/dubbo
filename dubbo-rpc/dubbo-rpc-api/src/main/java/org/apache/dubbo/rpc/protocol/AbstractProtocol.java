@@ -46,10 +46,12 @@ public abstract class AbstractProtocol implements Protocol {
 
     protected final Logger logger = LoggerFactory.getLogger(getClass());
 
+    // 缓存导出的服务Exporter
     protected final Map<String, Exporter<?>> exporterMap = new ConcurrentHashMap<String, Exporter<?>>();
 
     /**
      * <host:port, ProtocolServer>
+     *     缓存启动的服务器
      */
     protected final Map<String, ProtocolServer> serverMap = new ConcurrentHashMap<>();
 
@@ -99,12 +101,12 @@ public abstract class AbstractProtocol implements Protocol {
         }
     }
 
-    @Override
+    @Override //创建AsyncToSyncInvoker 这个的作用是根据RpcInvocation设置的调用方式，如果是同步调用则阻塞线程等待调用结果
     public <T> Invoker<T> refer(Class<T> type, URL url) throws RpcException {
         return new AsyncToSyncInvoker<>(protocolBindingRefer(type, url));
     }
 
-    protected abstract <T> Invoker<T> protocolBindingRefer(Class<T> type, URL url) throws RpcException;
+        protected abstract <T> Invoker<T> protocolBindingRefer(Class<T> type, URL url) throws RpcException;
 
     public Map<String, Exporter<?>> getExporterMap() {
         return exporterMap;

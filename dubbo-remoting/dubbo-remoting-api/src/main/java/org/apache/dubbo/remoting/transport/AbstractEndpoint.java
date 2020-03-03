@@ -32,6 +32,10 @@ import static org.apache.dubbo.common.constants.CommonConstants.TIMEOUT_KEY;
 
 /**
  * AbstractEndpoint
+ * 此类的功能为
+ * 从url里获取超时时间
+ * 连接超时时间
+ * 加载编码器
  */
 public abstract class AbstractEndpoint extends AbstractPeer implements Resetable {
 

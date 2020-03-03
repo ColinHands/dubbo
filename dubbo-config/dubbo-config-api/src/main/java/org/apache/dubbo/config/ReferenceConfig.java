@@ -302,6 +302,7 @@ public class ReferenceConfig<T> extends ReferenceConfigBase<T> {
 
     @SuppressWarnings({"unchecked", "rawtypes", "deprecation"})
     private T createProxy(Map<String, String> map) {
+        // refer服务时先经过ProtocolListenerWrapper invoker监听链
         if (shouldJvmRefer(map)) {
             // 判断条件
             // 1、scope是local则是

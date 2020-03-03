@@ -38,6 +38,9 @@ import static org.apache.dubbo.common.constants.CommonConstants.TIMEOUT_KEY;
 
 /**
  * ExchangeReceiver
+ * 主要的功能是包装dubbo的channel，这个channel里有netty的channel
+ * 也就是对应的客户端
+ * 就是把要发送的请求包装成request然后让netty的channel去发送
  */
 final class HeaderExchangeChannel implements ExchangeChannel {
 
@@ -45,6 +48,7 @@ final class HeaderExchangeChannel implements ExchangeChannel {
 
     private static final String CHANNEL_KEY = HeaderExchangeChannel.class.getName() + ".CHANNEL";
 
+    // 这里的 channel 指向的是用于通信的客户端 NettyClient
     private final Channel channel;
 
     private volatile boolean closed = false;
@@ -173,6 +177,7 @@ final class HeaderExchangeChannel implements ExchangeChannel {
         closed = true;
         if (timeout > 0) {
             long start = System.currentTimeMillis();
+            // 当这个Channel已经通信完成 或者超过了超时时间就等待10秒
             while (DefaultFuture.hasFuture(channel)
                     && System.currentTimeMillis() - start < timeout) {
                 try {

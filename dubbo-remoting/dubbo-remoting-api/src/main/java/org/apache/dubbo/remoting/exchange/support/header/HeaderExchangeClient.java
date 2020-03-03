@@ -46,6 +46,7 @@ import static org.apache.dubbo.remoting.utils.UrlUtils.getIdleTimeout;
 public class HeaderExchangeClient implements ExchangeClient {
 
     private final Client client;
+    // 为HeaderExchangeChannel HeaderExchangeChannel里的Channel为NettyClient
     private final ExchangeChannel channel;
 
     private static final HashedWheelTimer IDLE_CHECK_TIMER = new HashedWheelTimer(
@@ -55,6 +56,7 @@ public class HeaderExchangeClient implements ExchangeClient {
 
     public HeaderExchangeClient(Client client, boolean startTimer) {
         Assert.notNull(client, "Client can't be null");
+        // 为NettyClient
         this.client = client;
         this.channel = new HeaderExchangeChannel(client);
 

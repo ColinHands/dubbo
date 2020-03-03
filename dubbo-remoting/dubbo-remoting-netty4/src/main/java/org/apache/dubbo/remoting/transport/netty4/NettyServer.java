@@ -53,6 +53,8 @@ import static org.apache.dubbo.common.constants.CommonConstants.SSL_ENABLED_KEY;
 
 /**
  * NettyServer.
+ * 功能是打开 关闭netty服务端
+ * 查看这个服务器链接的客户端channel
  */
 public class NettyServer extends AbstractServer implements RemotingServer {
 
@@ -77,6 +79,7 @@ public class NettyServer extends AbstractServer implements RemotingServer {
     public NettyServer(URL url, ChannelHandler handler) throws RemotingException {
         // you can customize name and type of client thread pool by THREAD_NAME_KEY and THREADPOOL_KEY in CommonConstants.
         // the handler will be wrapped: MultiMessageHandler->HeartbeatHandler->handler
+        // 您可以在CommonConstants中通过THREAD_NAME_KEY和THREADPOOL_KEY自定义客户端线程池的名称和类型。
         super(ExecutorUtil.setThreadName(url, SERVER_THREAD_POOL_NAME), ChannelHandlers.wrap(handler, url));
     }
 

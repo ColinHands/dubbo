@@ -89,8 +89,11 @@ final class NettyChannel extends AbstractChannel {
         if (ch == null) {
             return null;
         }
+        // CHANNEL_MAP为netty channel 与 NettyChannel之间的映射
         NettyChannel ret = CHANNEL_MAP.get(ch);
         if (ret == null) {
+            // 用NettyChannel包装netty的channel
+            // 然后把这个新建的nettyChannel返回给client使用 但实际发送请求的channel是netty的channel
             NettyChannel nettyChannel = new NettyChannel(ch, url, handler);
             if (ch.isActive()) {
                 nettyChannel.markActive(true);

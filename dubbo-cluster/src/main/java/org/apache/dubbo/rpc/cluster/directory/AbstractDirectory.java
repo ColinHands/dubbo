@@ -51,6 +51,8 @@ public abstract class AbstractDirectory<T> implements Directory<T> {
     private volatile boolean destroyed = false;
 
     // 消费者 URL 初始值与 url 一样 是实例话动态目录时传递进来的  zookeeper://127.0.0.1:2181/org.apache.dubbo.registry.RegistryService?application=dubbo-demo-annotation-consumer&dubbo=2.0.2&pid=13590&refer=application%3Ddubbo-demo-annotation-consumer%26dubbo%3D2.0.2%26init%3Dfalse%26interface%3Dorg.apache.dubbo.demo.DemoService%26methods%3DsayHello%2CsayHelloAsync%26pid%3D13590%26register.ip%3D192.168.125.101%26side%3Dconsumer%26sticky%3Dfalse%26timestamp%3D1582183103354&timestamp=1582213962729
+    // 在执行订阅方法时 subscribe(URL url) 会改变 除了改变了consumer协议还加了category参数
+    // consumer://192.168.125.101/org.apache.dubbo.demo.DemoService?application=dubbo-demo-annotation-consumer&category=providers,configurators,routers&dubbo=2.0.2&init=false&interface=org.apache.dubbo.demo.DemoService&methods=sayHello,sayHelloAsync&pid=35181&side=consumer&sticky=false&timestamp=1582422570255
     private volatile URL consumerUrl;
 
     protected RouterChain<T> routerChain;

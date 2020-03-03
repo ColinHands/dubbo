@@ -62,7 +62,7 @@ public class NettyHandler extends SimpleChannelHandler {
             throw new IllegalArgumentException("handler == null");
         }
         this.url = url;
-        // 这里的 handler 类型为 NettyServer后者NettyClient
+        // 这里的 handler 类型为 NettyServer或者NettyClient
         // 因为NettyHandler对象实在打开服务器端后者客户端时创建的
         this.handler = handler;
     }

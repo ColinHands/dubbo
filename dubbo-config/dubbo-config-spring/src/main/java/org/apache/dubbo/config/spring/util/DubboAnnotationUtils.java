@@ -110,6 +110,7 @@ public class DubboAnnotationUtils {
 
         if (interfaceClass == null && defaultInterfaceClass != null) {
             // Find all interfaces from the annotated class
+            // 从带注释的类中查找所有接口
             // To resolve an issue : https://github.com/apache/dubbo/issues/3251
             Class<?>[] allInterfaces = getAllInterfacesForClass(defaultInterfaceClass);
 

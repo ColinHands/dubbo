@@ -32,6 +32,8 @@ import java.lang.annotation.Target;
  * Dubbo Component Scan {@link Annotation},scans the classpath for annotated components that will be auto-registered as
  * Spring beans. Dubbo-provided {@link Service} and {@link Reference}.
  *
+ * Dubbo组件扫描{@link Annotation}，扫描类路径中自动注册为的带注释的组件
+ * Spring bean。dubbo提供了{@link服务}和{@link引用}。
  * @see Service
  * @see Reference
  * @since 2.5.7

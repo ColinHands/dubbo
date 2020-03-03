@@ -54,6 +54,7 @@ public class HeaderExchangeServer implements ExchangeServer {
 
     protected final Logger logger = LoggerFactory.getLogger(getClass());
 
+    // 为NettyServer
     private final RemotingServer server;
     private AtomicBoolean closed = new AtomicBoolean(false);
 
@@ -64,6 +65,7 @@ public class HeaderExchangeServer implements ExchangeServer {
 
     public HeaderExchangeServer(RemotingServer server) {
         Assert.notNull(server, "server == null");
+        // 为NettyServer
         this.server = server;
         startIdleCheckTask(getUrl());
     }
@@ -171,7 +173,10 @@ public class HeaderExchangeServer implements ExchangeServer {
 
     @Override
     public ExchangeChannel getExchangeChannel(InetSocketAddress remoteAddress) {
+        // Channel是dubbo的Channel，是对netty的Channel的包装
         Channel channel = server.getChannel(remoteAddress);
+        // 会新建HeaderExchangeChannel包装dubbo的Channel 然后再把这个HeaderExchangeChannel
+        // 放到dubbo的Channel的Attribute里
         return HeaderExchangeChannel.getOrAddChannel(channel);
     }
 

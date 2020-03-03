@@ -35,6 +35,8 @@ public interface DubboConfigBinder extends EnvironmentAware {
      * <p>Default is "true". Turn this off to enforce that all bind parameters
      * must have a matching field in the target object.
      *
+     * 设置是否忽略未知字段，即是否忽略在目标对象中没有相应字段true的”。关闭此选项以强制所有绑定参数必须在目标对象中具有匹配字段。
+     *
      * @see #bind
      */
     void setIgnoreUnknownFields(boolean ignoreUnknownFields);
@@ -52,6 +54,7 @@ public interface DubboConfigBinder extends EnvironmentAware {
     /**
      * Bind the properties to Dubbo Config Object under specified prefix.
      *
+     * 将属性绑定到指定前缀下的Dubbo配置对象。
      * @param prefix
      * @param dubboConfig
      */

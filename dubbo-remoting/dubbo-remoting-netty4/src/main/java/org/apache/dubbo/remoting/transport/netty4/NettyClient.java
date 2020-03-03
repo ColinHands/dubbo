@@ -137,14 +137,17 @@ public class NettyClient extends AbstractClient {
                 try {
                     // Close old channel
                     // copy reference
+                    // 获取老的Channel
                     Channel oldChannel = NettyClient.this.channel;
                     if (oldChannel != null) {
                         try {
                             if (logger.isInfoEnabled()) {
                                 logger.info("Close old netty channel " + oldChannel + " on create new netty channel " + newChannel);
                             }
+                            // 关闭老的Channel
                             oldChannel.close();
                         } finally {
+                            // 从NettyChannel移除对应的信息
                             NettyChannel.removeChannelIfDisconnected(oldChannel);
                         }
                     }
@@ -198,6 +201,7 @@ public class NettyClient extends AbstractClient {
 
     @Override
     protected org.apache.dubbo.remoting.Channel getChannel() {
+        // c 、channel 为io.netty.channel netty框架的channel
         Channel c = channel;
         if (c == null) {
             return null;

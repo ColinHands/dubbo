@@ -28,6 +28,7 @@ import org.springframework.core.Ordered;
  * The Bean customizer for {@link AbstractConfig Dubbo Config}. Generally, The subclass will be  registered as a Spring
  * Bean that is used to {@link #customize(String, AbstractConfig) customize} {@link AbstractConfig Dubbo Config} bean
  * after {@link DubboConfigBinder#bind(String, AbstractConfig) its binding}.
+ * 用于{@link AbstractConfig Dubbo配置}的Bean自定义器。通常，这个子类会被注册为一个Spring Bean，用于在{@link DubboConfigBinder#bind(String, AbstractConfig)绑定}之后定制}{@link AbstractConfig DubboConfig} Bean。
  * <p>
  * If There are multiple {@link DubboConfigBeanCustomizer} beans in the Spring {@link ApplicationContext context}, they
  * are executed orderly, thus the subclass should be aware to implement the {@link #getOrder()} method.

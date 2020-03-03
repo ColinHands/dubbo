@@ -64,8 +64,16 @@ public class NettyServerHandler extends ChannelDuplexHandler {
         return channels;
     }
 
+    /**
+     * NettyServerHandler用来处理客户端连接请求
+     * 在服务端每当一个客户端连接成功时，在执行NettyServerHandler方法时会把io.netty.channel.Channel包装成NettyChannel
+     * 此时就会传入ChannelHandler 这个ChannelHandler就是NettyServer
+     * @param ctx
+     * @throws Exception
+     */
     @Override
     public void channelActive(ChannelHandlerContext ctx) throws Exception {
+        // io.netty.channel.Channel包装成NettyChannel
         NettyChannel channel = NettyChannel.getOrAddChannel(ctx.channel(), url, handler);
         if (channel != null) {
             channels.put(NetUtils.toAddressString((InetSocketAddress) ctx.channel().remoteAddress()), channel);

@@ -42,7 +42,14 @@ import static org.apache.dubbo.remoting.Constants.IDLE_TIMEOUT_KEY;
 
 /**
  * AbstractServer
- */
+ * 这个功能为给客户端channel发送消息
+ * 客户端channel链接此服务器的处理
+ * 此服务器断开某个客户端channel的处理
+ *
+ * 处理连接、取消连接、sent、接收消息、caught （但只是检查 实际处理会交给AbstractPeer）
+ *
+ * 发送数据 为send(Object message, boolean sent)方法 与AbstractPeer的send(Object message）方法不同
+ * */
 public abstract class AbstractServer extends AbstractEndpoint implements RemotingServer {
 
     protected static final String SERVER_THREAD_POOL_NAME = "DubboServerHandler";
@@ -50,7 +57,9 @@ public abstract class AbstractServer extends AbstractEndpoint implements Remotin
     ExecutorService executor;
     private InetSocketAddress localAddress;
     private InetSocketAddress bindAddress;
+    // 服务器最大可接受连接数
     private int accepts;
+    // 空闲超时时间，单位：毫秒
     private int idleTimeout;
 
     private ExecutorRepository executorRepository = ExtensionLoader.getExtensionLoader(ExecutorRepository.class).getDefaultExtension();
@@ -59,6 +68,7 @@ public abstract class AbstractServer extends AbstractEndpoint implements Remotin
         super(url, handler);
         localAddress = getUrl().toInetSocketAddress();
 
+        // 获取ip与端口号
         String bindIp = getUrl().getParameter(Constants.BIND_IP_KEY, getUrl().getHost());
         int bindPort = getUrl().getParameter(Constants.BIND_PORT_KEY, getUrl().getPort());
         if (url.getParameter(ANYHOST_KEY, false) || NetUtils.isInvalidLocalHost(bindIp)) {
@@ -68,6 +78,7 @@ public abstract class AbstractServer extends AbstractEndpoint implements Remotin
         this.accepts = url.getParameter(ACCEPTS_KEY, DEFAULT_ACCEPTS);
         this.idleTimeout = url.getParameter(IDLE_TIMEOUT_KEY, DEFAULT_IDLE_TIMEOUT);
         try {
+            // 子类实现
             doOpen();
             if (logger.isInfoEnabled()) {
                 logger.info("Start " + getClass().getSimpleName() + " bind " + getBindAddress() + ", export " + getLocalAddress());
@@ -114,7 +125,9 @@ public abstract class AbstractServer extends AbstractEndpoint implements Remotin
 
     @Override
     public void send(Object message, boolean sent) throws RemotingException {
+        // 获取所有客户端channel通道
         Collection<Channel> channels = getChannels();
+        // 群发消息
         for (Channel channel : channels) {
             if (channel.isConnected()) {
                 channel.send(message, sent);
@@ -134,6 +147,7 @@ public abstract class AbstractServer extends AbstractEndpoint implements Remotin
             logger.warn(e.getMessage(), e);
         }
         try {
+            // 调用子类实现
             doClose();
         } catch (Throwable e) {
             logger.warn(e.getMessage(), e);
@@ -163,18 +177,26 @@ public abstract class AbstractServer extends AbstractEndpoint implements Remotin
         return idleTimeout;
     }
 
+    /**
+     * 被客户端连接
+     * @param ch
+     * @throws RemotingException
+     */
     @Override
     public void connected(Channel ch) throws RemotingException {
         // If the server has entered the shutdown process, reject any new connection
+        // 如果服务器已进入关闭过程，则拒绝任何新连接
         if (this.isClosing() || this.isClosed()) {
             logger.warn("Close new channel " + ch + ", cause: server is closing or has been closed. For example, receive a new connect request while in shutdown process.");
             ch.close();
             return;
         }
 
+        // 超过上限，关闭新的链接
         Collection<Channel> channels = getChannels();
         if (accepts > 0 && channels.size() > accepts) {
             logger.error("Close channel " + ch + ", cause: The server " + ch.getLocalAddress() + " connections greater than max config " + accepts);
+            // 关闭新的链接
             ch.close();
             return;
         }

@@ -68,6 +68,8 @@ public class Exchangers {
         }
         url = url.addParameterIfAbsent(Constants.CODEC_KEY, "exchange");
         // 调用 HeaderExchanger 的 bind 方法创建 ExchangeServer 实例
+        // 在Exchangers类里根据URL的parameters里的exchanger的值（默认为header）
+        // 获取Exchanger默认为HeaderExchanger
         return getExchanger(url).bind(url, handler);
     }
 

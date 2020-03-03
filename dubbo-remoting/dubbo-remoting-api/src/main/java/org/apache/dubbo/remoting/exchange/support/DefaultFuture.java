@@ -48,6 +48,7 @@ public class DefaultFuture extends CompletableFuture<Object> {
 
     private static final Logger logger = LoggerFactory.getLogger(DefaultFuture.class);
 
+    // 这里保存的Channel就是正在通信的Channel，如果通信结束就会把这个Channel从这里去掉
     private static final Map<Long, Channel> CHANNELS = new ConcurrentHashMap<>();
 
     private static final Map<Long, DefaultFuture> FUTURES = new ConcurrentHashMap<>();
@@ -88,6 +89,7 @@ public class DefaultFuture extends CompletableFuture<Object> {
 
     /**
      * check time out of the future
+     * 创建超时定时器检查任务
      */
     private static void timeoutCheck(DefaultFuture future) {
         TimeoutCheckTask task = new TimeoutCheckTask(future.getId());
@@ -98,6 +100,10 @@ public class DefaultFuture extends CompletableFuture<Object> {
      * init a DefaultFuture
      * 1.init a DefaultFuture
      * 2.timeout check
+     *
+     * 新建DefaultFuture会把request的id设置为DefaultFuture的ID 并把这个DefaultFuture放入map
+     * 把线程池执行器放进去
+     * 初始化定时器任务
      *
      * @param channel channel
      * @param request the request
@@ -120,6 +126,7 @@ public class DefaultFuture extends CompletableFuture<Object> {
         return CHANNELS.containsValue(channel);
     }
 
+    // 判断是否是等待返回 如果sent为true则客户端在主线程等待结果返回
     public static void sent(Channel channel, Request request) {
         DefaultFuture future = FUTURES.get(request.getId());
         if (future != null) {
@@ -220,6 +227,7 @@ public class DefaultFuture extends CompletableFuture<Object> {
         if (executor != null && executor instanceof ThreadlessExecutor) {
             ThreadlessExecutor threadlessExecutor = (ThreadlessExecutor) executor;
             if (threadlessExecutor.isWaiting()) {
+                // 通知等待的线程返回
                 threadlessExecutor.notifyReturn();
             }
         }
@@ -283,6 +291,7 @@ public class DefaultFuture extends CompletableFuture<Object> {
                 return;
             }
 
+            // 获取future里的线程池去执行定时器任务
             if (future.getExecutor() != null) {
                 future.getExecutor().execute(() -> notifyTimeout(future));
             } else {

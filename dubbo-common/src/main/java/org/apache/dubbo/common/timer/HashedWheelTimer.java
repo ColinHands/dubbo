@@ -568,18 +568,22 @@ public class HashedWheelTimer implements Timer {
         /**
          * RemainingRounds will be calculated and set by Worker.transferTimeoutsToBuckets() before the
          * HashedWheelTimeout will be added to the correct HashedWheelBucket.
+         * 在HashedWheelTimeout之前的transfertimeoutstobuckets()将被添加到正确的HashedWheelBucket中。
          */
         long remainingRounds;
 
         /**
          * This will be used to chain timeouts in HashedWheelTimerBucket via a double-linked-list.
          * As only the workerThread will act on it there is no need for synchronization / volatile.
+         * 这将通过一个双链表将HashedWheelTimerBucket中的超时链接起来。
+         * 因为只有workerThread将对其进行操作，所以不需要同步/ volatile。
          */
         HashedWheelTimeout next;
         HashedWheelTimeout prev;
 
         /**
          * The bucket to which the timeout was added
+         * 添加超时的桶
          */
         HashedWheelBucket bucket;
 
@@ -602,12 +606,15 @@ public class HashedWheelTimer implements Timer {
         @Override
         public boolean cancel() {
             // only update the state it will be removed from HashedWheelBucket on next tick.
+            // 只有更新状态，它将被删除从HashedWheelBucket在下一次滴答。
             if (!compareAndSetState(ST_INIT, ST_CANCELLED)) {
                 return false;
             }
             // If a task should be canceled we put this to another queue which will be processed on each tick.
             // So this means that we will have a GC latency of max. 1 tick duration which is good enough. This way
             // we can make again use of our MpscLinkedQueue and so minimize the locking / overhead as much as possible.
+            // 如果一个任务应该被取消，我们把它放到另一个队列，它将被处理在每个滴答。
+            // 这意味着我们的GC延迟将达到最大值。1个节拍的持续时间就足够了。通过这种方式，我们可以再次使用MpscLinkedQueue，从而尽可能减少锁定/开销。
             timer.cancelledTimeouts.add(this);
             return true;
         }
